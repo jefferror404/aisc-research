@@ -221,9 +221,15 @@ def render_company_row(con, cl, margin_focus=None):
 
 
 def render_layer_table(con, layer, margin_focus=None):
+    # Order sub-layers by the MIN sort_order within each sub-layer (so the curated
+    # sort_order fully controls group order, e.g. L8: US → Chinese → Neocloud), then
+    # by sort_order within the group. Keeps each sub-layer's rows contiguous.
     rows = con.execute(
-        """SELECT * FROM company_layer WHERE layer=? ORDER BY
-           CASE sublayer WHEN '' THEN 'zzz' ELSE sublayer END, sort_order""", (layer,)
+        """SELECT cl.* FROM company_layer cl
+           JOIN (SELECT sublayer, MIN(sort_order) AS so FROM company_layer
+                 WHERE layer=? GROUP BY sublayer) g
+             ON cl.sublayer = g.sublayer
+           WHERE cl.layer=? ORDER BY g.so, cl.sort_order""", (layer, layer)
     ).fetchall()
     if not rows:
         return ""
