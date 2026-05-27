@@ -135,8 +135,9 @@ LAYER_TABLE_COLS = [
     ("AI rev % of total", "aishare"),
     ("Revenue FY25", "fyrev"), ("Revenue 2026E", "est"), ("Δ % YoY", "chg"),
     ("Gross Margin", "gm"), ("Operating Margin", "om"), ("EBITDA Margin", "ebitda"),
-    ("Market Cap", "mcap"), ("P/E (TTM)", "pe"), ("Fwd P/E", "fpe"), ("P/S", "ps"),
-    ("EV/EBITDA", "evebitda"), ("P/FCF", "pfcf"), ("FCF Margin", "fcfm"),
+    ("FCF Margin", "fcfm"),
+    ("Market Cap", "mcap"), ("P/E (TTM)", "pe"), ("Fwd P/E", "fpe"), ("PEG", "peg"),
+    ("P/S", "ps"), ("P/B", "pb"), ("EV/EBITDA", "evebitda"), ("P/FCF", "pfcf"),
     ("EPS Growth", "eg"), ("Backlog / RPO", "backlog"),
 ]
 # number of columns that follow the (ticker, company, segment, AI%) lead block —
@@ -207,6 +208,10 @@ def render_company_row(con, cl, margin_focus=None):
         sign = "+" if chg >= 0 else ""
         chg_cell = f'{sign}{chg*100:.0f}%'
 
+    # PEG shown as a plain number; P/B as a multiple.
+    peg_txt = f"{m['peg_ratio']:.1f}" if (m and m["peg_ratio"] is not None) else "—"
+    pb_txt = mult(m["price_to_book"]) if (m and m["price_to_book"] is not None) else "—"
+
     if not is_public:
         # private name — no market data
         cells = [
@@ -226,16 +231,18 @@ def render_company_row(con, cl, margin_focus=None):
         f'<td class="num">{fy_cell}</td>',
         f'<td class="num">{est_cell}</td>',
         f'<td class="num {cls_growth(chg)}">{chg_cell}</td>',
-        f'<td class="num {cls_margin(gm)}{_mfcls("gm", margin_focus)}">{pct(gm)}</td>',
-        f'<td class="num {cls_margin(om)}{_mfcls("om", margin_focus)}">{pct(om)}</td>',
-        f'<td class="num {cls_margin(eb)}{_mfcls("ebitda", margin_focus)}">{pct(eb)}</td>',
+        f'<td class="num {cls_margin(gm)}">{pct(gm)}</td>',
+        f'<td class="num {cls_margin(om)}">{pct(om)}</td>',
+        f'<td class="num {cls_margin(eb)}">{pct(eb)}</td>',
+        f'<td class="num {cls_margin(fcf_margin)}">{pct(fcf_margin)}</td>',
         f'<td class="num">{b(m["market_cap_usd"]) if m else "—"}</td>',
         f'<td class="num">{mult(m["pe_ttm"]) if m else "—"}</td>',
         f'<td class="num">{mult(m["forward_pe"]) if m else "—"}</td>',
+        f'<td class="num">{peg_txt}</td>',
         f'<td class="num">{mult(ps)}</td>',
+        f'<td class="num">{pb_txt}</td>',
         f'<td class="num">{mult(ev_ebitda)}</td>',
         f'<td class="num {"neg" if fcf_neg else ""}">{mult(p_fcf) if p_fcf is not None else ("neg" if fcf_neg else "—")}</td>',
-        f'<td class="num {cls_margin(fcf_margin)}">{pct(fcf_margin)}</td>',
         f'<td class="num {cls_growth(m["earnings_growth"] if m else None)}">{pct(m["earnings_growth"]) if m else "—"}</td>',
         f'<td class="bk">{esc(cl["backlog_rpo"] or "—")}</td>',
     ]
@@ -255,9 +262,7 @@ def render_layer_table(con, layer, margin_focus=None):
     ).fetchall()
     if not rows:
         return ""
-    head = "".join(
-        f'<th class="{("mfocus" if c[1] == margin_focus else "")}">{esc(c[0])}</th>'
-        for c in LAYER_TABLE_COLS)
+    head = "".join(f"<th>{esc(c[0])}</th>" for c in LAYER_TABLE_COLS)
     body_parts, current_sub = [], None
     for cl in rows:
         sub = cl["sublayer"] or ""
@@ -326,7 +331,7 @@ def render_references(order):
                 if url else f"<b>{esc(label)}</b>")
         lis += (f'<li id="ref-{sid}"><span class="rnum">[{i}]</span> '
                 f'<span class="rbody">{head} — {esc(detail)}</span></li>')
-    return (f'<section id="references"><h2>8 · Sources &amp; References</h2>'
+    return (f'<section id="references"><h2>6 · Sources &amp; References</h2>'
             f'<p class="note">Click any footnote number in the text to jump here. '
             f'External links open the primary source where a public URL exists.</p>'
             f'<ol class="refs">{lis}</ol></section>')
@@ -607,7 +612,7 @@ def render_deal_web():
     def stack(title, rows):
         lis = "".join(f"<li><b>{esc(c)}</b> — {esc_html_keep(t)}</li>" for c, t in rows)
         return f'<div class="stack"><h4>{esc(title)}</h4><ul>{lis}</ul></div>'
-    return f'''<section id="dealweb"><h2>7 · The AI Deal Web</h2>
+    return f'''<section id="dealweb"><h2>5 · The AI Deal Web</h2>
       <p>{esc_html_keep(d["intro"])}</p>
       <div style="margin:1.5rem 0 2rem;">
         <a href="ai_deal_network_layered.html" target="_blank"
@@ -649,7 +654,13 @@ def render_layer_head(lc, layer):
     if lc.get("analyst_take"):
         take = (f'<div class="take"><h4>Analyst’s Take</h4>'
                 f'<p>{esc_html_keep(lc["analyst_take"])}</p>{stance}</div>')
-    return f'<div class="layerhead"><div class="lhleft">{left}</div><div class="lhright">{take}</div></div>'
+    kr = N.KEY_RISKS.get(layer) if hasattr(N, "KEY_RISKS") else None
+    risk = ""
+    if kr:
+        risk = (f'<div class="keyrisk"><h4>Key risk</h4>'
+                f'<p>{esc_html_keep(kr)}</p></div>')
+    return (f'<div class="layerhead"><div class="lhleft">{left}</div>'
+            f'<div class="lhright">{take}{risk}</div></div>')
 
 
 def render_layer_section(con, layer_row):
@@ -729,7 +740,6 @@ def build():
     where FY is stale). P/S = market cap ÷ TTM revenue. Market cap converted to USD. “—” = not
     available / not meaningful.</p></section>
   {layer_sections}
-  {render_risks()}
   {render_deal_web()}'''
 
     body, cite_order = process_citations(body)
@@ -750,7 +760,7 @@ def build():
 <nav class="topnav"><div class="wrap">
   <a href="#summary">Summary</a><a href="#capex">Capex</a><a href="#connect">Value</a>
   <span class="sep">Layers</span>{nav}
-  <a href="#risks">Risks</a><a href="#dealweb">Deals</a><a href="#references">Sources</a>
+  <a href="#dealweb">Deals</a><a href="#references">Sources</a>
 </div></nav>
 <main class="wrap">
   {body}
@@ -872,6 +882,11 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);color:v
   border-radius:8px;padding:8px 12px}
 .stance .stag{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;
   color:#fff;background:var(--accent);padding:2px 8px;border-radius:20px;margin-right:8px;vertical-align:middle}
+/* per-layer key risk (red) */
+.keyrisk{background:#fff6f4;border:1px solid #f3d9cf;border-left:4px solid var(--red);
+  border-radius:0 12px 12px 0;padding:12px 16px;margin:12px 0}
+.keyrisk h4{color:var(--red);margin-bottom:6px}
+.keyrisk p{font-size:13.5px;margin:0;color:#3a4254}
 /* capex slice inside Market Size cell */
 .capexslice{background:#fff;border:1px dashed #b9c8ec;border-radius:8px;padding:8px 10px;margin:0 0 9px;font-size:12.5px;color:#243a73}
 .capexslice .cstag{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:#5670c4;margin-bottom:3px}

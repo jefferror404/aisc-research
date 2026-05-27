@@ -469,13 +469,13 @@ LAYER_CONTENT = {
     "stance": "Core long: the hyperscalers (MSFT, AMZN, GOOGL, ORCL) for quality + backlog. Neoclouds/ex-miners only for high-beta exposure, sized for binary contract risk.",
     "capex_slice": "L8 <i>is</i> the $725B — this layer does the spending, it does not receive a slice. The capex is L8 converting its balance sheet into the L0–L7 stack below.",
     "charts": [
-      {"title": "Cloud infrastructure services — revenue market share, 2026E", "source": "synergy", "type": "donut", "unit": "%",
-       "rows": [("AWS (Amazon)", 30.0, "$128.7B FY25, +19%"),
-                ("Microsoft Azure", 23.0, "+40% growth; $ not disclosed"),
-                ("Google Cloud", 13.5, "~$59B FY25, +~50%"),
-                ("Alibaba Cloud", 4.0, "largest non-Western"),
-                ("Oracle (OCI)", 3.0, "fastest-growing; $553B RPO"),
-                ("Others + neoclouds", 26.5, "CoreWeave, Nebius, IBM, Tencent, etc.")]},
+      {"title": "Cloud infrastructure services — revenue share & $ , 2026E (~$520B market)", "source": "synergy", "type": "donut", "unit": "%",
+       "rows": [("AWS (Amazon)", 30.0, "≈$156B 2026E · $128.7B FY25, +19%"),
+                ("Microsoft Azure", 23.0, "≈$120B 2026E · +40% YoY"),
+                ("Google Cloud", 13.5, "≈$70B 2026E · ~$59B FY25"),
+                ("Alibaba Cloud", 4.0, "≈$21B 2026E · largest non-Western"),
+                ("Oracle (OCI)", 3.0, "≈$16B 2026E · $553B RPO"),
+                ("Others + neoclouds", 26.5, "≈$138B 2026E · CoreWeave, Nebius, IBM, Tencent")]},
     ],
     "who_pays_whom": "Model labs (L9) are the largest customers; enterprises buy AI services on top. Clouds in turn pay L7 (real estate), L6 (networking), L5 (servers), L4 (chips) and L0 (power). Neoclouds raise debt against their hyperscaler/lab contracts to buy GPUs from NVIDIA.",
     "bottleneck": {"severity": "MEDIUM", "points": [
@@ -884,6 +884,24 @@ VALUATION_FOCUS = {
     "L2":  "TSMC on <b>forward P/E + EV/EBITDA</b>. The special feature is a persistent <b>geopolitical (Taiwan) discount</b> on the multiple relative to the quality of the monopoly — you are paid to hold single-country concentration risk. OSATs trade on ordinary <b>P/E + EV/EBITDA</b>.",
     "L1":  "EDA (Synopsys, Cadence) earns a premium <b>forward P/E</b> on ~95%-incremental-margin recurring software — value it like SaaS. Equipment makers (ASML, AMAT, Lam, KLA) on <b>P/E + EV/EBITDA against order backlog and book-to-bill</b>; the swing factor on the multiple is China-revenue exposure under export controls.",
     "L0":  "Equipment franchises (Vertiv, Eaton, GE Vernova) on <b>EV/EBITDA + P/E against backlog and book-to-bill</b> — backlog growth matters more than current earnings in a supply-constrained layer. Utilities (Constellation, Vistra, Talen) on <b>EV/EBITDA + contracted-PPA visibility and rate-base growth</b>, not headline P/E.",
+}
+
+# The single most important risk per layer — rendered as a red "Key risk" callout in
+# each layer head. The eight risks that used to live in the standalone §5 are folded in
+# here (capex-gap + funding → L8, circular financing → L9, ASIC → L4, memory cycle → L3,
+# optics → L6, Taiwan → L2, power/buildout → L0); L10/L7/L5/L1 get curated risks.
+KEY_RISKS = {
+    "L10": "App-margin compression. An app keeps only the spread above what it pays the model, and switching costs are low (swap the model underneath). If model prices don't fall as fast as competition pushes app prices down, the middle gets squeezed.",
+    "L9":  "Circular financing. NVDA→OpenAI→NVDA, AMZN→Anthropic→AWS and similar loops exceed $150B in announced flows — vendors funding the customers who then buy their product. It's legal and disclosed, but it inflates apparent demand and concentrates counterparty risk on a handful of labs.",
+    "L8":  "The revenue-to-capex gap, and what it does to free cash flow. ~$725B of 2026 capex sits against only ~$170B of AI revenue (~4–5× gap), and BofA estimates capex now eats ~94% of operating cash flow after dividends vs a ~40% ten-year norm[[cite:bofa]] — increasingly debt- and prepayment-financed. The bull counter is $1.8T+ of contracted backlog, but it's concentrated in a few labs funded partly by their own suppliers.",
+    "L7":  "Buildout & power access. You cannot energize a shell where there's no power — Northern Virginia vacancy is <5% and grid-interconnect queues run 7–10 years, while electrician and long-lead-equipment (transformer, switchgear) shortages cap how fast contractors deliver even on secured sites.",
+    "L6":  "Optics cycle risk. Lumentum trades near ~50× forward earnings (and +1,474% LTM); the optics complement to every GPU upgrade is real, but the multiples assume the LTA-backed boom runs uninterrupted through 2027.",
+    "L5":  "Margin commoditization. Assembly has almost no pricing power (Foxconn ~5–7% gross on AI servers) and hyperscalers dual-source ODMs; revenue scales spectacularly with the GPU cycle, but very little drops to the bottom line.",
+    "L4":  "Hyperscaler ASIC substitution. Google TPU, AWS Trainium ($20B+ run-rate), Meta MTIA and Microsoft Maia are all in production — every ASIC gigawatt is a gigawatt NVIDIA doesn't sell at merchant margins. The deeper risk is a de-rate of the most over-earning name in tech if demand air-pockets.",
+    "L3":  "Memory is cyclical. Today's sold-out, peak-margin conditions (SK Hynix 80%+ operating margin; NAND contract prices +246% in 2025) have always mean-reverted. The low forward P/Es (5–8×) are the market pricing in the eventual down-cycle, not cheapness.",
+    "L2":  "Taiwan / single-country concentration. TSMC manufactures essentially all leading-edge AI silicon and holds the CoWoS monopoly, and Hoya supplies ~75% of EUV mask blanks from Japan — single-country, single-supplier tail risks that sit under the entire chain.",
+    "L1":  "Single-supplier concentration + China. The most defensible positions are also sole-source (ASML for EUV, Hoya for EUV mask blanks, Lasertec for EUV mask inspection); the swing risk is China exposure (~20–30% of ASML revenue) under tightening export controls.",
+    "L0":  "Power is the binding constraint. Grid-interconnect queues run 7–10 years and transformer/switchgear lead times exceed 100 weeks[[cite:bernstein]] — power, not silicon, is increasingly the limiter of 2026–27, with US data-center power demand compounding ~15–20%/yr.",
 }
 
 # Extra charts merged AFTER each layer's existing `charts`. Same schema as LAYER_CONTENT charts.

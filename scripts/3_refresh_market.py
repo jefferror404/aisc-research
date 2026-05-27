@@ -130,8 +130,8 @@ def main():
                (ticker, as_of, currency, price, market_cap_usd, market_cap_native,
                 pe_ttm, forward_pe, ps_ttm, earnings_growth, revenue_growth,
                 gross_margin, operating_margin, ebitda_margin, profit_margin, total_revenue_ttm_usd,
-                free_cash_flow_usd, ebitda_usd, enterprise_value_usd)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                free_cash_flow_usd, ebitda_usd, enterprise_value_usd, price_to_book, peg_ratio)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (tk, TODAY, trade_cur,
              info.get("currentPrice") or info.get("regularMarketPrice"),
              mc_usd, mc_native,
@@ -140,7 +140,8 @@ def main():
              info.get("earningsGrowth"), info.get("revenueGrowth"),
              info.get("grossMargins"), info.get("operatingMargins"),
              info.get("ebitdaMargins"), info.get("profitMargins"), rev_ttm_usd,
-             fcf_usd, ebitda_usd, ev_usd),
+             fcf_usd, ebitda_usd, ev_usd,
+             info.get("priceToBook"), info.get("trailingPegRatio") or info.get("pegRatio")),
         )
 
         # ---- per-fiscal-year financials ----

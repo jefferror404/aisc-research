@@ -69,6 +69,8 @@ CREATE TABLE IF NOT EXISTS market_data (
     free_cash_flow_usd    REAL,          -- TTM FCF, USD-converted (financial currency)
     ebitda_usd            REAL,          -- TTM EBITDA, USD-converted (financial currency)
     enterprise_value_usd  REAL,          -- EV, USD-converted (trading currency)
+    price_to_book         REAL,          -- P/B (currency-neutral ratio from yfinance)
+    peg_ratio             REAL,          -- trailing PEG (currency-neutral ratio from yfinance)
     PRIMARY KEY (ticker, as_of)
 );
 
