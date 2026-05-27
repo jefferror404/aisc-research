@@ -1,6 +1,30 @@
 # AI Supply Chain Equity Research — Project State Document
-## Last Updated: May 26, 2026
-## Current Version: v10 (data-pipeline + HTML report)
+## Last Updated: May 27, 2026
+## Current Version: v11 (analyst-voice report, live on GitHub Pages)
+
+---
+
+## 0. v11 — Analyst Voice, Citations, Charts + Live Hosting (May 27, 2026)
+
+v11 is a content/presentation overhaul of the v10 pipeline (same DB + scripts) plus public hosting. No schema or refresh-logic changes; all edits are in `data/narrative.py` and `scripts/4_build_report.py`.
+
+**What changed:**
+- **First-person head-of-research voice.** Every layer now opens with an **Analyst's Take** (the thesis) and a one-line **My Stance** (the investment call), stored as `analyst_take` / `stance` keys per layer in `LAYER_CONTENT`. Section intros (§2, §3) rewritten in first person.
+- **Clickable citations.** Prose embeds `[[cite:ID]]` tokens; `process_citations()` in the builder numbers them in document order and renders **§8 Sources & References** from the `SOURCES` registry in `narrative.py`. ~62 footnotes → 14 sources. External links where a public URL exists. "Sources" added to the top nav.
+- **Inline SVG charts.** `render_charts()` + `svg_donut()` / `svg_bars()` (pure SVG, no JS/libs). 6 donuts (LLM share, cloud, GPU, HBM, foundry, switching) + 2 bar charts (app ARR, enterprise API share). Chart data lives in a `charts` key per layer.
+- **Per-layer $725B capex slice.** Each Market-Size cell shows that layer's slice of the $725B funnel vs the independently-researched TAM (`capex_slice` key). Rendered as a dashed callout inside `render_block_three()`.
+- **§2 restructured.** Allocation table 2.1 now leads (with `allocation_intro` + sourced `allocation_source` line); the "is the $725B the top-level flow?" analysis is distilled into a `takeaway` callout *below* the table (was a callout above it, keyed `is_it_the_top_flow` in v10).
+- **§3 numbering fixed.** Was 3.1 → 3.3 (no 3.2). Now **3.1** money flow, **3.2** value capture, **3.3** takeaways.
+- **L9 share data restored as charts** (was collapsed to run-on bullets in v10): Global LLM revenue share (Counterpoint) donut + Enterprise API spend share (Menlo/Ramp) bars, both with ARR/valuation notes.
+- **Comp-table columns relabelled** (`LAYER_TABLE_COLS`): Revenue FY25, Revenue 2026E, Gross Margin, Operating Margin, EBITDA Margin, Market Cap, P/E (TTM), Fwd P/E, P/S, EPS Growth.
+- Report grew ~142 KB → ~184 KB. Verified via gstack `browse` (no console errors; donuts/bars/refs render).
+
+**Live hosting (new):**
+- Repo: **https://github.com/jefferror404/aisc-research** (public). GitHub account `jefferror404`.
+- Live site: **https://jefferror404.github.io/aisc-research/** (GitHub Pages, `main` branch, root). `index.html` is a meta-refresh redirect to `report/ai_supply_chain_report.html`. The interactive graph is also live at `/ai_deal_network_layered.html` and is linked from §7 via a "Launch Interactive Deal Network Map" button.
+- `.gitignore` excludes `data/aisc.db`, `.venv/`, `.gstack/`, `__pycache__`. The DB stays local; the committed HTML is the published artifact.
+- **Publish workflow:** edit → `python scripts/4_build_report.py` → `git add report/ai_supply_chain_report.html && git commit && git push`. Pages redeploys in ~30s. Quarterly data refresh adds `3_refresh_market.py` before the build.
+- GitHub Pages on a **private** repo needs a paid plan (422 error), which is why the repo is public.
 
 ---
 
@@ -85,6 +109,7 @@ Interactive D3.js force-directed graph showing all major deals. v9 version is LA
 | v8 | Deleted standalone glossary → embedded terms inline within each layer using yellow callout boxes. Each layer now opens with "What this layer does / Who pays whom / Sub-segments / How to analyze this layer" deep analytical framing. §3 trimmed to concise money-flow overview only. |
 | v9 | Added per-layer Bottleneck (severity + resolution), Market Size, Value-Added/Margins analysis blocks (3-column colored cells). NEW §3.3 Value Capture Map quantifying margins by layer. HTML chart upgraded to LAYERED top-to-bottom layout. |
 | v10 | **Architecture pivot: SQLite DB + yfinance refresh pipeline + scrollable HTML report** (replaces static docx). Every public name now carries a full live comp set (FY rev, FY+1E, GM/OM/EBITDA, mkt cap, P/E TTM, fwd P/E, P/S, earnings growth) + segment-% of total. GPU vs CPU vs ASIC deep-dive added to L4. $725B "top flow vs total market" answered in §2. Bottleneck/Market/Value blocks expanded from bullets to full analysis. Contract durations added to every major deal. Deal elaboration paragraphs after each layer table. Network graph untouched (per user). |
+| v11 | **Analyst-voice overhaul + live hosting.** First-person Analyst's Take + investment stance per layer. Clickable numbered footnotes → §8 Sources & References (SOURCES registry). Inline SVG donuts/bars for share data. Per-layer slice of the $725B funnel in Market Size. §2 restructured (table 2.1 leads, takeaway below + sourced). §3 numbering fixed (3.1/3.2/3.3). L9 share tables restored as charts. Comp columns relabelled. Published to GitHub Pages (public repo `jefferror404/aisc-research`). |
 
 ---
 
@@ -219,6 +244,11 @@ These are cases where the user caught errors or I self-corrected after deeper re
 - **(v10) Wants accurate data from official earnings/financial statements + reliable sources**; tables hold the data, short paragraphs after tables carry elaboration
 - **(v10) Wants for every public name: FY25 rev, FY26E rev, gross/operating/EBITDA margin, mkt cap, P/E TTM, fwd P/E, P/S, earnings growth, and segment revenue as % of total (or "pure play")**
 - **(v10) Do NOT modify the network-graph HTML** unless asked
+- **(v11) Wants a first-person, professional head-of-research voice** — unique insights/views per layer, not just tables and numbers; elaborate, don't write terse one-liners
+- **(v11) Wants sources to be clickable** (footnotes → references) wherever a figure is cited
+- **(v11) Wants share/ranking data as small tables or charts**, not run-on sentences
+- **(v11) Wants each layer's Market Size to show its slice of the $725B capex** alongside the researched TAM
+- **(v11) Wants the report public/shareable** — hosted live on GitHub Pages; will keep updating it
 
 ---
 
@@ -277,6 +307,16 @@ The user mentioned wanting to continue in a Claude project long-term. Potential 
 
 **v9 and earlier (legacy):** reports built with Node.js + `docx` npm package; build scripts `build_report_vN.js`; HTML charts use D3.js v7. No longer the active workflow.
 
+**v11 builder additions (`scripts/4_build_report.py`):**
+- `process_citations(body)` — regex-replaces `[[cite:ID]]` with numbered superscript links (document order); returns `(html, ordered_ids)`. Run once over the full assembled body in `build()` before appending references.
+- `render_references(order)` — builds §8 from `N.SOURCES`.
+- `svg_donut(rows, unit)` / `svg_bars(rows, unit)` / `render_charts(charts)` — pure inline SVG, palette `CHART_PALETTE`. Chart `source` adds a `[[cite:ID]]` token in the caption (processed in the global pass).
+- `render_block_three()` injects the `capex_slice` dashed callout into the Market-Size cell.
+- `render_layer_section()` renders Analyst's Take + stance after `what_it_does`, and charts after the three-up block.
+- Self-contained: still no JS, no external deps. Charts are SVG; citations are in-page anchors.
+
+**Hosting / git:** public repo `jefferror404/aisc-research`; `gh` CLI authenticated as `jefferror404`. Pages enabled via `gh api repos/.../pages` (source `main` / root). Update = rebuild HTML, commit `report/ai_supply_chain_report.html`, push.
+
 ---
 
-*This state document should be uploaded as project knowledge alongside the three deliverable files (v9.docx, layered HTML, CSV) when creating the project.*
+*This state document should be uploaded as project knowledge alongside the deliverable files when creating the project. The live report is at https://jefferror404.github.io/aisc-research/.*
