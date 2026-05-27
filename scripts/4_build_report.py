@@ -356,29 +356,66 @@ def svg_bars(rows, unit):
             f'aria-label="bar chart">{parts}</svg>')
 
 
+def svg_stacked_cols(years, series, unit):
+    """Vertical stacked columns. years: list of x labels. series: list of
+    (name, [v_per_year], note?). Shows total + composition over time."""
+    n = len(years)
+    colw, gap, top, bottom, plot_h = 46, 26, 20, 22, 160
+    totals = [sum(s[1][i] for s in series) for i in range(n)]
+    maxv = max(totals) or 1
+    w = gap + n * (colw + gap)
+    h = top + plot_h + bottom
+    parts = ""
+    for i, yr in enumerate(years):
+        x = gap + i * (colw + gap)
+        y = top + plot_h
+        for j, s in enumerate(series):
+            v = s[1][i]
+            seg_h = (v / maxv) * plot_h
+            y -= seg_h
+            color = CHART_PALETTE[j % len(CHART_PALETTE)]
+            parts += (f'<rect x="{x:.1f}" y="{y:.1f}" width="{colw}" height="{seg_h:.1f}" '
+                      f'fill="{color}"><title>{esc(s[0])} {esc(yr)}: {_fmt_val(v, unit)}</title></rect>')
+        ytot = top + plot_h - (totals[i] / maxv) * plot_h
+        parts += (f'<text x="{x + colw/2:.1f}" y="{ytot - 5:.1f}" text-anchor="middle" '
+                  f'class="coltot">{_fmt_val(totals[i], unit)}</text>')
+        parts += (f'<text x="{x + colw/2:.1f}" y="{top + plot_h + 15:.1f}" text-anchor="middle" '
+                  f'class="collbl">{esc(yr)}</text>')
+    return (f'<svg viewBox="0 0 {w:.0f} {h}" class="stackcol" role="img" '
+            f'aria-label="stacked column chart">{parts}</svg>')
+
+
 def render_charts(charts):
-    """Render a layer's chart list: SVG (donut/bar) + a legend/detail table beside it."""
+    """Render a layer's chart list: SVG (donut/bar/stacked) + a legend table beside it."""
     if not charts:
         return ""
     out = '<div class="charts">'
     for ch in charts:
         unit = ch.get("unit", "")
-        rows = ch["rows"]
         cite = ""
         sid = ch.get("source")
         if sid and sid in N.SOURCES:
             cite = f' [[cite:{sid}]]'  # processed later in the global citation pass
-        if ch.get("type") == "bar":
-            chart_svg = svg_bars(rows, unit)
-        else:
-            chart_svg = svg_donut(rows, unit)
-        # legend / detail rows
+        ctype = ch.get("type")
         leg = ""
-        for i, (label, val, note) in enumerate(rows):
-            color = CHART_PALETTE[i % len(CHART_PALETTE)]
-            leg += (f'<tr><td><span class="dot" style="background:{color}"></span>{esc(label)}</td>'
-                    f'<td class="num">{_fmt_val(val, unit)}</td>'
-                    f'<td class="cnote">{esc(note)}</td></tr>')
+        if ctype == "stacked":
+            series = ch["series"]
+            chart_svg = svg_stacked_cols(ch["years"], series, unit)
+            for i, s in enumerate(series):
+                name, vals = s[0], s[1]
+                note = s[2] if len(s) > 2 else ""
+                color = CHART_PALETTE[i % len(CHART_PALETTE)]
+                leg += (f'<tr><td><span class="dot" style="background:{color}"></span>{esc(name)}</td>'
+                        f'<td class="num">{_fmt_val(vals[-1], unit)}</td>'
+                        f'<td class="cnote">{esc(note)}</td></tr>')
+        else:
+            rows = ch["rows"]
+            chart_svg = svg_bars(rows, unit) if ctype == "bar" else svg_donut(rows, unit)
+            for i, (label, val, note) in enumerate(rows):
+                color = CHART_PALETTE[i % len(CHART_PALETTE)]
+                leg += (f'<tr><td><span class="dot" style="background:{color}"></span>{esc(label)}</td>'
+                        f'<td class="num">{_fmt_val(val, unit)}</td>'
+                        f'<td class="cnote">{esc(note)}</td></tr>')
         out += (f'<figure class="chart"><figcaption>{esc(ch["title"])}{cite}</figcaption>'
                 f'<div class="chartbody"><div class="chartviz">{chart_svg}</div>'
                 f'<table class="legend"><tbody>{leg}</tbody></table></div></figure>')
@@ -475,6 +512,7 @@ def render_capex(con):
       {alloc}
       <p class="src">{esc_html_keep(c["allocation_source"])}</p>
       <p class="note">{esc_html_keep(c["allocation_note"])}</p>
+      {render_charts(c.get("charts"))}
       <div class="callout"><h4>{esc(q["heading"])}</h4>{body}</div></section>'''
 
 
@@ -592,7 +630,9 @@ def render_layer_section(con, layer_row):
     if hasattr(N, "EXTRA_CHARTS"):
         charts += N.EXTRA_CHARTS.get(layer, [])
     parts.append(render_charts(charts))
-    parts.append(render_subsegments(lc.get("sub_segments")))
+    # Sub-segment cards only where no chart covers the breakdown (user decision).
+    if layer in ("L10", "L7", "L0"):
+        parts.append(render_subsegments(lc.get("sub_segments")))
     parts.append(render_extra_table(layer))
     if layer == "L4":
         parts.append(render_gpu_cpu_asic())
@@ -815,6 +855,9 @@ sup.cite a:hover{text-decoration:underline}
 .bars{width:100%;max-width:440px;height:auto}
 .bars .barlbl{font-size:11px;fill:#3a4254}
 .bars .barval{font-size:11px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.stackcol{width:100%;max-width:460px;height:auto}
+.stackcol .coltot{font-size:10.5px;fill:var(--ink);font-weight:700}
+.stackcol .collbl{font-size:11px;fill:var(--muted)}
 .legend{border-collapse:collapse;flex:1 1 240px;font-size:12px}
 .legend td{padding:3px 6px;border-bottom:1px solid #f0f2f7;vertical-align:top}
 .legend td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}

@@ -111,6 +111,18 @@ CAPEX = {
         "Accelerators are the largest single bucket and the tightest bottleneck, while power &amp; cooling is the "
         "fastest-growing line as rack density climbs from ~130 kW (Blackwell) toward ~1 MW (Rubin)."
     ),
+    # Per-company capex history & forecast (stacked). Approximate total capex in $B by calendar year.
+    "charts": [
+        {"title": "Big-5 hyperscaler capex — history &amp; forecast ($B)", "source": "filings",
+         "type": "stacked", "unit": "$B", "years": ["2023", "2024", "2025", "2026E"],
+         "series": [
+             ("Amazon", [48, 83, 118, 200], "Total capex; AWS is the fast-growing part."),
+             ("Microsoft", [28, 55, 95, 190], "FY basis; Azure + OpenAI infra."),
+             ("Alphabet", [32, 52, 85, 188], "Google Cloud + DeepMind + TPU."),
+             ("Meta", [28, 37, 72, 140], "Captive AI clusters (no external cloud)."),
+             ("Oracle", [8, 13, 21, 50], "OCI / Stargate buildout."),
+         ]},
+    ],
     # Distilled key takeaway, rendered AFTER table 2.1 (the user's direct question, answered concisely).
     "takeaway": {
         "heading": "So is the $725B the ‘top-level flow’, and does it equal the market size?",
