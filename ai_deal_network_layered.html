@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The AI Deal Web — Layered Interactive Network</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root {
+  --ink: #0e1116;
+  --ink-2: #1a1f29;
+  --paper: #f5f1e8;
+  --paper-2: #ebe6d8;
+  --rule: #2c3340;
+  --muted: #6a7280;
+  --equity: #2e7d32;
+  --compute: #b91c1c;
+  --chip: #d97706;
+  --accent: #1d4ed8;
+  --hyperscaler: #0e3a5f;
+  --llm: #6a2d8e;
+  --chipmaker: #5a7d18;
+  --neocloud: #1d4ed8;
+  --foundry: #8b4513;
+  --equipment: #2f4f4f;
+  --power: #c2410c;
+  --other: #525252;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  overflow: hidden;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+  grid-template-areas:
+    "header header"
+    "sidebar canvas";
+}
+
+header.topbar {
+  grid-area: header;
+  border-bottom: 1px solid var(--rule);
+  padding: 18px 28px 14px;
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brand { display: flex; align-items: baseline; gap: 14px; }
+.brand h1 {
+  font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; letter-spacing: -0.02em;
+}
+.brand .small {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--paper-2); opacity: 0.7;
+}
+
+.search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--ink-2); border: 1px solid var(--rule);
+  border-radius: 4px; padding: 6px 10px; min-width: 280px;
+}
+.search input {
+  background: none; border: none; color: var(--paper);
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  outline: none; width: 100%;
+}
+.search input::placeholder { color: rgba(245,241,232,0.4); }
+
+aside.sidebar {
+  grid-area: sidebar;
+  border-right: 1px solid var(--rule);
+  background: var(--paper); overflow-y: auto;
+  padding: 24px 22px; font-size: 13px;
+}
+
+.section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--paper-2);
+}
+
+.legend { margin-bottom: 22px; }
+.legend .item {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px; cursor: pointer; padding: 4px 6px;
+  border-radius: 3px; transition: background 0.15s; user-select: none;
+}
+.legend .item:hover { background: var(--paper-2); }
+.legend .item.disabled { opacity: 0.35; }
+.legend .swatch { width: 26px; height: 4px; border-radius: 1px; flex-shrink: 0; }
+.legend .label { font-size: 12px; font-weight: 500; }
+
+.filters { margin-bottom: 22px; }
+.chip {
+  display: inline-block; padding: 4px 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+  border: 1px solid var(--rule); border-radius: 3px;
+  margin: 0 4px 4px 0; cursor: pointer; user-select: none;
+  background: var(--paper); color: var(--ink); transition: all 0.15s;
+}
+.chip:hover { background: var(--ink); color: var(--paper); }
+.chip.active { background: var(--ink); color: var(--paper); }
+
+.detail { margin-top: 16px; }
+.detail.empty { font-style: italic; color: var(--muted); font-size: 12px; }
+
+.entity-card { border: 1px solid var(--ink); background: var(--paper); padding: 14px; margin-bottom: 12px; }
+.entity-card .name { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 2px; }
+.entity-card .meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; }
+.entity-card .desc { font-size: 12px; line-height: 1.5; color: var(--ink-2); margin-bottom: 12px; }
+.entity-card .deal-list-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); margin-bottom: 6px; }
+
+.deal-item { font-size: 11px; padding: 6px 0; border-top: 1px solid var(--paper-2); line-height: 1.4; }
+.deal-item:first-child { border-top: none; }
+.deal-item .deal-meta { font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 2px; }
+.deal-item .deal-amount { font-weight: 600; color: var(--ink); }
+.deal-item .deal-arrow { font-family: 'JetBrains Mono', monospace; color: var(--muted); }
+
+main.canvas {
+  grid-area: canvas; position: relative; overflow: hidden;
+  background: var(--paper);
+}
+
+#graph { width: 100%; height: 100%; }
+
+.layer-band {
+  fill: rgba(0,0,0,0.025);
+}
+.layer-band-divider {
+  stroke: rgba(0,0,0,0.08);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  fill: none;
+}
+.layer-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  fill: var(--muted);
+  font-weight: 600;
+}
+.layer-label-bg {
+  fill: var(--paper);
+  opacity: 0.95;
+}
+
+.node rect, .node circle { cursor: pointer; transition: filter 0.2s; }
+.node:hover rect, .node:hover circle { filter: brightness(1.08); }
+.node text { pointer-events: none; user-select: none; }
+
+.link { cursor: pointer; transition: opacity 0.2s; }
+.link.faded { opacity: 0.05; }
+.link-label {
+  pointer-events: none; user-select: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600;
+  fill: var(--ink); paint-order: stroke;
+  stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round;
+}
+
+.node.faded { opacity: 0.18; }
+.node.faded text { opacity: 0.4; }
+
+.controls {
+  position: absolute; top: 18px; right: 18px;
+  display: flex; flex-direction: column; gap: 6px; z-index: 10;
+}
+.controls button {
+  background: var(--paper); border: 1px solid var(--rule); color: var(--ink);
+  width: 32px; height: 32px; border-radius: 3px; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+.controls button:hover { background: var(--ink); color: var(--paper); }
+
+.summary-stats {
+  position: absolute; top: 18px; left: 18px;
+  background: var(--ink); color: var(--paper);
+  padding: 12px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+  display: flex; gap: 24px; z-index: 10;
+}
+.summary-stats .stat { display: flex; flex-direction: column; gap: 2px; }
+.summary-stats .stat .num {
+  font-size: 16px; font-family: 'Fraunces', serif; font-weight: 600;
+  letter-spacing: -0.02em; text-transform: none;
+}
+
+.hint {
+  position: absolute; bottom: 18px; right: 18px;
+  background: var(--paper); border: 1px solid var(--rule);
+  padding: 8px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--muted); z-index: 10;
+}
+
+aside::-webkit-scrollbar { width: 6px; }
+aside::-webkit-scrollbar-track { background: var(--paper-2); }
+aside::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>The AI Deal Web</h1>
+      <span class="small">Layered Network · Investment + Compute · May 2026</span>
+    </div>
+    <div class="search">
+      <span style="font-size:11px;color:#6a7280">⌕</span>
+      <input id="search-input" type="text" placeholder="Search company, ticker, or deal…">
+    </div>
+  </header>
+
+  <aside class="sidebar">
+
+    <div class="legend">
+      <div class="section-title">Deal Type</div>
+      <div class="item" data-type="equity">
+        <div class="swatch" style="background: var(--equity)"></div>
+        <div class="label">Equity / Investment</div>
+      </div>
+      <div class="item" data-type="compute">
+        <div class="swatch" style="background: var(--compute)"></div>
+        <div class="label">Compute Commitment</div>
+      </div>
+      <div class="item" data-type="chip">
+        <div class="swatch" style="background: var(--chip)"></div>
+        <div class="label">Chip Supply</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="section-title">Layer Filter</div>
+      <span class="chip active" data-cat="llm">LLMs / Apps</span>
+      <span class="chip active" data-cat="hyperscaler">Hyperscalers</span>
+      <span class="chip active" data-cat="neocloud">Neoclouds</span>
+      <span class="chip active" data-cat="chipmaker">Chipmakers</span>
+      <span class="chip active" data-cat="equipment">Equipment / Comp.</span>
+      <span class="chip active" data-cat="foundry">Foundry / IP</span>
+      <span class="chip active" data-cat="other">Other</span>
+    </div>
+
+    <div class="section-title">Details</div>
+    <div id="detail-panel" class="detail empty">
+      Click a company or deal line to see details. Drag nodes horizontally to reposition; vertical position locked to supply-chain layer. Scroll to zoom.
+    </div>
+
+  </aside>
+
+  <main class="canvas">
+    <svg id="graph"></svg>
+
+    <div class="summary-stats">
+      <div class="stat"><div>Entities</div><div class="num" id="stat-nodes">—</div></div>
+      <div class="stat"><div>Deals</div><div class="num" id="stat-links">—</div></div>
+      <div class="stat"><div>Total Value</div><div class="num" id="stat-value">—</div></div>
+    </div>
+
+    <div class="controls">
+      <button id="zoom-in" title="Zoom in">+</button>
+      <button id="zoom-out" title="Zoom out">−</button>
+      <button id="reset" title="Reset">⟳</button>
+    </div>
+
+    <div class="hint">vertical = supply chain layer · drag horizontally · scroll to zoom · click for details</div>
+  </main>
+
+</div>
+
+<script>
+// =========================================================
+// DATA
+// =========================================================
+// Each entity has a `layer` (0-10 in AI supply chain).
+// Layers map to vertical bands top-to-bottom in the chart.
+
+const LAYERS = [
+  { id: "apps", label: "LAYER 10 · APPS & AGENTS", y: 0.05 },
+  { id: "llm",  label: "LAYER 9 · FOUNDATION MODELS (LLMs)", y: 0.18 },
+  { id: "cloud", label: "LAYER 8 · HYPERSCALE + NEOCLOUDS", y: 0.36 },
+  { id: "infra", label: "LAYER 6-7 · NETWORKING, FIBER, DC INFRA", y: 0.56 },
+  { id: "chips", label: "LAYER 4-5 · CHIPS + SERVERS", y: 0.74 },
+  { id: "foundation", label: "LAYER 1-2 · FOUNDRY + EQUIPMENT + IP", y: 0.90 }
+];
+
+const ENTITIES = [
+  // LLMs (top)
+  { id: "OPENAI", name: "OpenAI", category: "llm", layer: "llm", ticker: "Private", desc: "Public Benefit Corp ~$852B valuation. ARR $25B (Apr 26). >$1T in compute commitments accumulated." },
+  { id: "ANTHROPIC", name: "Anthropic", category: "llm", layer: "llm", ticker: "Private", desc: "ARR $30B (Apr 26). Valuation ~$350B. Only LLM with all 3 hyperscalers as investor + customer." },
+  { id: "XAI", name: "xAI (Grok)", category: "llm", layer: "llm", ticker: "Private", desc: "Elon Musk's AI company. ~$200B valuation. Colossus DC + Memphis." },
+
+  // Hyperscalers
+  { id: "MSFT", name: "Microsoft", category: "hyperscaler", layer: "cloud", ticker: "MSFT", desc: "Azure cloud + Copilot apps + 27% stake in OpenAI worth ~$135B." },
+  { id: "AMZN", name: "Amazon (AWS)", category: "hyperscaler", layer: "cloud", ticker: "AMZN", desc: "AWS cloud 30% share. Largest Anthropic investor ($46B+). Trainium custom silicon." },
+  { id: "GOOGL", name: "Alphabet (Google)", category: "hyperscaler", layer: "cloud", ticker: "GOOGL", desc: "Google Cloud, Gemini LLM, TPU custom silicon. 14% Anthropic stake." },
+  { id: "ORCL", name: "Oracle", category: "hyperscaler", layer: "cloud", ticker: "ORCL", desc: "Stargate JV operator. OpenAI $300B / 5-year contract starting 2027." },
+  { id: "META", name: "Meta Platforms", category: "hyperscaler", layer: "cloud", ticker: "META", desc: "First-party AI (Llama, MTIA ASICs). $6B Corning fiber deal Jan 2026." },
+
+  // Neoclouds
+  { id: "CRWV", name: "CoreWeave", category: "neocloud", layer: "cloud", ticker: "CRWV", desc: "Largest pure-play neocloud. $22.4B+ OpenAI contracts. NVIDIA $2B + $6B services. Acquired Core Scientific $9B." },
+  { id: "NBIS", name: "Nebius Group", category: "neocloud", layer: "cloud", ticker: "NBIS", desc: "European neocloud challenger. NVIDIA $2B equity. Meta multi-billion ramp." },
+  { id: "IREN", name: "IREN", category: "neocloud", layer: "cloud", ticker: "IREN", desc: "Ex-bitcoin miner turned AI host. MSFT $9.7B GPU lease anchor." },
+  { id: "WULF", name: "TeraWulf", category: "neocloud", layer: "cloud", ticker: "WULF", desc: "Ex-BTC miner. $12.8B HPC contracted. Q1 26 HPC overtook BTC." },
+  { id: "HUT", name: "Hut 8", category: "neocloud", layer: "cloud", ticker: "HUT", desc: "Ex-BTC miner. $7B 15-yr Google/Fluidstack lease (Anthropic workloads)." },
+  { id: "CIFR", name: "Cipher Mining", category: "neocloud", layer: "cloud", ticker: "CIFR", desc: "Ex-BTC miner. $5.5B 15-yr AWS lease." },
+  { id: "CORZ", name: "Core Scientific", category: "neocloud", layer: "cloud", ticker: "CORZ (→CRWV)", desc: "Being acquired by CoreWeave for $9B all-stock. $10.2B 12-yr CRWV contract." },
+
+  // DC infra / Networking / Fiber (Layer 6-7)
+  { id: "NOK", name: "Nokia", category: "other", layer: "infra", ticker: "NOK", desc: "AI-RAN partnership with NVIDIA. NVDA $1B stake (2.9%). T-Mobile USA pilot." },
+  { id: "GLW", name: "Corning", category: "other", layer: "infra", ticker: "GLW", desc: "Meta $6B multi-year fiber deal Jan 2026. Q1 26 optical comm $1.8B (+36% YoY)." },
+  { id: "LITE", name: "Lumentum", category: "other", layer: "infra", ticker: "LITE", desc: "EMLs + 1.6T transceivers + OCS. NVDA invested $2B. +1,474% LTM." },
+  { id: "COHR", name: "Coherent", category: "other", layer: "infra", ticker: "COHR", desc: "Optical transceivers. NVDA invested $2B. InP lasers sold out 2027." },
+
+  // Chipmakers (Layer 4-5)
+  { id: "NVDA", name: "NVIDIA", category: "chipmaker", layer: "chips", ticker: "NVDA", desc: "86-90% AI accelerator share. $193.7B FY26 DC revenue. Major AI investor: $40B+ deployments 2026 YTD." },
+  { id: "AMD", name: "AMD", category: "chipmaker", layer: "chips", ticker: "AMD", desc: "5-7% AI share. MI300X → MI450 (OpenAI 6 GW deal Oct 2025)." },
+  { id: "AVGO", name: "Broadcom", category: "chipmaker", layer: "chips", ticker: "AVGO", desc: "Custom ASIC leader. Google TPU, Meta MTIA, OpenAI custom silicon. ~$28B AI segment." },
+  { id: "CBRS", name: "Cerebras Systems", category: "chipmaker", layer: "chips", ticker: "CBRS", desc: "Wafer-scale inference. IPO May 2026, +68% day 1. $510M FY25 revenue. $10B OpenAI." },
+  { id: "INTC", name: "Intel", category: "chipmaker", layer: "chips", ticker: "INTC", desc: "1-2% AI share. NVIDIA $5B in 2024 (now ~$25B+). Building 18A foundry." },
+  { id: "MRVL", name: "Marvell Technology", category: "chipmaker", layer: "chips", ticker: "MRVL", desc: "Custom AWS Trainium. Optical DSPs. NVIDIA $2B." },
+
+  // Foundation: Foundry + Equipment + IP (Layer 1-2)
+  { id: "SNPS", name: "Synopsys", category: "equipment", layer: "foundation", ticker: "SNPS", desc: "EDA #1. NVDA $2B Dec 2025. Chip design IP." },
+
+  // Other
+  { id: "SOFTBANK", name: "SoftBank Group", category: "other", layer: "cloud", ticker: "9984.T", desc: "Stargate JV financial backer. ~$30B in OpenAI. Arm parent." },
+  { id: "MGX", name: "MGX (UAE)", category: "other", layer: "cloud", ticker: "Sovereign", desc: "Abu Dhabi sovereign AI fund. Stargate equity partner." },
+  { id: "STARGATE", name: "Stargate JV", category: "other", layer: "cloud", ticker: "JV", desc: "$500B target: OpenAI + Oracle + SoftBank + MGX. 10 GW US. Feb 2026 reports of partner disputes." }
+];
+
+const DEALS = [
+  // MSFT ↔ OPENAI
+  { source: "MSFT", target: "OPENAI", type: "equity", amount: "$13B → 27% = $135B", amountUSD: 135000, date: "Oct 28, 2025",
+    desc: "OpenAI PBC restructuring. 17.6x return on $13B invested. Microsoft IP rights to 2032 + Azure API exclusivity. No board seat." },
+  { source: "OPENAI", target: "MSFT", type: "compute", amount: "$250B Azure", amountUSD: 250000, date: "Oct 2025",
+    desc: "Multi-year Azure compute. Microsoft no longer right-of-first-refusal — OpenAI can now contract with AWS, Google, Oracle freely." },
+
+  // NVDA ↔ OPENAI
+  { source: "NVDA", target: "OPENAI", type: "equity", amount: "Up to $100B (LOI)", amountUSD: 100000, date: "Sep 22, 2025",
+    desc: "Letter of intent. 10 GW deployment. Vera Rubin platform; first GW H2 2026. Per Kress at UBS Dec 2025: still LOI, 'no definitive agreement.'" },
+  { source: "OPENAI", target: "NVDA", type: "chip", amount: "10 GW (4-5M GPUs)", amountUSD: 350000, date: "Sep 2025",
+    desc: "Cash from NVDA flows back as chip purchases. ~$35B per GW = $350B over 10 GW. Largest single-vendor chip commitment ever." },
+
+  // AMD ↔ OPENAI
+  { source: "AMD", target: "OPENAI", type: "equity", amount: "10% warrant (160M @ $0.01)", amountUSD: 35000, date: "Oct 6, 2025",
+    desc: "Warrant for 160M AMD shares at $0.01. Vests on milestones up to $600 share price. ~$35B at current AMD price. Jensen called it 'imaginative.'" },
+  { source: "OPENAI", target: "AMD", type: "chip", amount: "6 GW MI450 + future", amountUSD: 60000, date: "Oct 2025",
+    desc: "First 1 GW H2 2026. Multi-generational. AMD stock +24% on announcement." },
+
+  // ORCL ↔ OPENAI
+  { source: "ORCL", target: "OPENAI", type: "compute", amount: "$300B / 5yr (4.5 GW)", amountUSD: 300000, date: "Jul / Sep 2025",
+    desc: "Largest single enterprise compute contract ever. Begins 2027. Abilene TX + 5 new sites (TX, NM, OH, WI)." },
+
+  // AMZN ↔ OPENAI
+  { source: "AMZN", target: "OPENAI", type: "compute", amount: "$38B / 7yr", amountUSD: 38000, date: "Nov 3, 2025",
+    desc: "First-ever OpenAI-AWS contract. Ended Azure exclusivity. Hundreds of thousands of NVIDIA GPUs on AWS." },
+
+  // AVGO ↔ OPENAI
+  { source: "AVGO", target: "OPENAI", type: "chip", amount: "10 GW custom AI accelerators", amountUSD: 100000, date: "Oct 2025",
+    desc: "Co-designed custom ASIC for OpenAI through 2030." },
+
+  // CRWV ↔ OPENAI
+  { source: "CRWV", target: "OPENAI", type: "compute", amount: "$22.4B total", amountUSD: 22400, date: "2024-2025",
+    desc: "Original $11.9B 5-year + $4B Q2 2025 expansion + later extensions. CoreWeave's #1 customer." },
+
+  // CBRS ↔ OPENAI
+  { source: "CBRS", target: "OPENAI", type: "compute", amount: "$10B / 750 MW", amountUSD: 10000, date: "Mar 2026",
+    desc: "Wafer-scale inference. Delivered via AWS Bedrock partnership (CS-3 + Trainium hybrid). Helped Cerebras IPO." },
+
+  // SOFTBANK / MGX / STARGATE
+  { source: "SOFTBANK", target: "OPENAI", type: "equity", amount: "~$30B+", amountUSD: 30000, date: "Jan 2025+",
+    desc: "Largest single Stargate equity sponsor." },
+  { source: "SOFTBANK", target: "STARGATE", type: "equity", amount: "Lead financial backer", amountUSD: 50000, date: "Jan 2025",
+    desc: "SoftBank has financial responsibility; OpenAI operational." },
+  { source: "MGX", target: "STARGATE", type: "equity", amount: "Equity partner", amountUSD: 10000, date: "Jan 2025",
+    desc: "Abu Dhabi sovereign fund." },
+  { source: "STARGATE", target: "OPENAI", type: "compute", amount: "$500B target / 10 GW", amountUSD: 500000, date: "Jan 21, 2025",
+    desc: "$500B target over 4 yrs. Feb 2026: The Information reports no staff hired, OpenAI/Oracle/SoftBank disputes. Compute commitments ARE being built — Abilene operational." },
+
+  // AMZN ↔ ANTHROPIC
+  { source: "AMZN", target: "ANTHROPIC", type: "equity", amount: "$8B + $13B + $25B = $46B+", amountUSD: 46000, date: "2023 – Apr 2026",
+    desc: "Cumulative $46B+. Project Rainier (Indiana) has 1M+ Trainium2 chips dedicated to Anthropic." },
+  { source: "ANTHROPIC", target: "AMZN", type: "compute", amount: ">$100B / 10yr AWS", amountUSD: 100000, date: "Nov 2025 + Apr 2026",
+    desc: "Trainium2/3 + GPU. 5 GW build. Anthropic's largest single compute commitment." },
+
+  // GOOGL ↔ ANTHROPIC
+  { source: "GOOGL", target: "ANTHROPIC", type: "equity", amount: "$3B (14% stake)", amountUSD: 3000, date: "2023 – Jan 2025",
+    desc: "$2B in 2023 + $1B Jan 2025. Google holds ~14%." },
+  { source: "ANTHROPIC", target: "GOOGL", type: "compute", amount: "1M TPUs (tens of $B; 1+ GW)", amountUSD: 30000, date: "Oct 23, 2025",
+    desc: "Up to 1M TPU chips. Ironwood (7th gen). Multi-gigawatt deployment 2026. Deepest TPU commitment by any external customer." },
+
+  // MSFT ↔ ANTHROPIC
+  { source: "MSFT", target: "ANTHROPIC", type: "equity", amount: "$5B (up to $10B)", amountUSD: 5000, date: "Nov 18, 2025",
+    desc: "First Microsoft investment in Anthropic. Drove Anthropic valuation from $183B → $350B." },
+  { source: "ANTHROPIC", target: "MSFT", type: "compute", amount: "$30B Azure + 1 GW", amountUSD: 30000, date: "Nov 18, 2025",
+    desc: "Grace Blackwell + Vera Rubin. Claude available on Microsoft Foundry. Makes Anthropic only LLM on all 3 hyperscalers." },
+
+  // NVDA ↔ ANTHROPIC
+  { source: "NVDA", target: "ANTHROPIC", type: "equity", amount: "Up to $10B", amountUSD: 10000, date: "Nov 18, 2025",
+    desc: "Joint announcement w/ Microsoft. First-ever deep tech partnership between NVDA and Anthropic." },
+
+  // NVDA ↔ Neoclouds
+  { source: "NVDA", target: "CRWV", type: "equity", amount: "$2B + $6B services", amountUSD: 8000, date: "Jan 2026",
+    desc: "CRWV Class A common at $87.20/share. Build 5+ GW AI factories by 2030. >$6B in services through 2032." },
+  { source: "NVDA", target: "NBIS", type: "equity", amount: "$2B equity", amountUSD: 2000, date: "2025",
+    desc: "AI cloud, fleet management, inference, AI factory design partnership." },
+  { source: "NVDA", target: "IREN", type: "equity", amount: "Strategic investment", amountUSD: 3000, date: "2025",
+    desc: "Part of NVDA's $5.3B GLW + IREN combined investment in 2025." },
+
+  // NVDA ↔ XAI
+  { source: "NVDA", target: "XAI", type: "equity", amount: "$2B+ (multiple rounds)", amountUSD: 4000, date: "2024-2026",
+    desc: "Participated in $6B (Dec 2024) and $20B (Jan 2026) xAI rounds." },
+
+  // NVDA ↔ INTC
+  { source: "NVDA", target: "INTC", type: "equity", amount: "$5B (now $25B+)", amountUSD: 25000, date: "2024",
+    desc: "Strategic stake. Has tripled in value. One of NVDA's best-performing investments." },
+
+  // NVDA ↔ Components
+  { source: "NVDA", target: "LITE", type: "equity", amount: "$2B (at $695.31)", amountUSD: 2000, date: "2025",
+    desc: "1.6T optics + EML lasers + OCS. LITE +1,474% LTM partly driven by NVDA validation." },
+  { source: "NVDA", target: "COHR", type: "equity", amount: "$2B", amountUSD: 2000, date: "2025",
+    desc: "Optical transceivers + silicon photonics. InP capacity sold out through 2027." },
+  { source: "NVDA", target: "MRVL", type: "equity", amount: "$2B", amountUSD: 2000, date: "2025",
+    desc: "Optical DSPs + custom silicon. AWS Trainium production." },
+  { source: "NVDA", target: "SNPS", type: "equity", amount: "$2B", amountUSD: 2000, date: "Dec 2025",
+    desc: "Chip design EDA + IP partnership. NVDA chips designed in Synopsys software." },
+  { source: "NVDA", target: "GLW", type: "equity", amount: "Part of $5.3B combined", amountUSD: 2000, date: "2026",
+    desc: "Fiber-optic infrastructure for AI data centers." },
+
+  // NVDA ↔ NOK
+  { source: "NVDA", target: "NOK", type: "equity", amount: "$1B (2.9% stake)", amountUSD: 1000, date: "Oct 2025",
+    desc: "Strategic AI-RAN + DC networking. T-Mobile USA pilot. NOK +73% YTD 26 on the back of this." },
+
+  // Other neocloud deals
+  { source: "MSFT", target: "CRWV", type: "compute", amount: "$10B+", amountUSD: 10000, date: "2024-2025",
+    desc: "Microsoft is CoreWeave's #2 customer. Multi-year compute capacity." },
+  { source: "MSFT", target: "IREN", type: "compute", amount: "$9.7B GPU lease", amountUSD: 9700, date: "2025",
+    desc: "Largest 'ex-miner' AI hosting deal." },
+  { source: "META", target: "CRWV", type: "compute", amount: "$14B", amountUSD: 14000, date: "2025",
+    desc: "Meta multi-billion to CoreWeave." },
+  { source: "GOOGL", target: "HUT", type: "compute", amount: "$13.2B via Fluidstack", amountUSD: 13200, date: "2025",
+    desc: "Google backstops Fluidstack-Hut 8 to host Anthropic workloads. Indirect Google funding of Anthropic compute." },
+  { source: "AMZN", target: "CIFR", type: "compute", amount: "$5.5B / 15 years", amountUSD: 5500, date: "2025",
+    desc: "AWS 15-yr Cipher Mining DC lease." },
+
+  // META ↔ GLW
+  { source: "META", target: "GLW", type: "compute", amount: "$6B fiber / multi-year", amountUSD: 6000, date: "Jan 27, 2026",
+    desc: "Largest fiber-optic contract ever. Multicore Fibre (4x density) + CPO systems for Meta AI DCs." },
+
+  // CRWV ↔ CORZ
+  { source: "CRWV", target: "CORZ", type: "equity", amount: "$9B all-stock", amountUSD: 9000, date: "Jul 7, 2025",
+    desc: "0.1235 CRWV shares per CORZ share. Closes Q4 2025. CRWV verticalizes 1.3 GW gross across CORZ DCs." }
+];
+
+// =========================================================
+// LAYOUT
+// =========================================================
+
+const svg = d3.select("#graph");
+const svgNode = document.getElementById("graph");
+const width = () => svgNode.clientWidth;
+const height = () => svgNode.clientHeight;
+
+const layerBackgroundG = svg.append("g").attr("class", "layer-bg");
+const g = svg.append("g").attr("class", "viewport");
+
+// Define arrow markers
+const defs = svg.append("defs");
+["equity", "compute", "chip"].forEach(type => {
+  const color = getComputedStyle(document.documentElement).getPropertyValue(`--${type}`).trim();
+  defs.append("marker")
+    .attr("id", `arrow-${type}`)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 28).attr("refY", 0)
+    .attr("markerWidth", 6).attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-5L10,0L0,5")
+    .attr("fill", color).attr("opacity", 0.85);
+});
+
+// Stats
+const totalValue = DEALS.reduce((s, d) => s + (d.amountUSD || 0), 0);
+document.getElementById("stat-nodes").textContent = ENTITIES.length;
+document.getElementById("stat-links").textContent = DEALS.length;
+document.getElementById("stat-value").textContent = `$${(totalValue/1000).toFixed(1)}B+`;
+
+// Node sizing by total deal value
+const nodeValueMap = {};
+DEALS.forEach(d => {
+  nodeValueMap[d.source] = (nodeValueMap[d.source] || 0) + (d.amountUSD || 0);
+  nodeValueMap[d.target] = (nodeValueMap[d.target] || 0) + (d.amountUSD || 0);
+});
+ENTITIES.forEach(e => { e.totalValue = nodeValueMap[e.id] || 0; });
+
+const sizeScale = d3.scaleSqrt()
+  .domain([0, d3.max(ENTITIES, e => e.totalValue)])
+  .range([22, 50]);
+
+// Multi-edge offset
+const linkCount = {};
+DEALS.forEach(d => {
+  const key = [d.source, d.target].sort().join("-");
+  linkCount[key] = (linkCount[key] || 0) + 1;
+});
+const linkIndex = {};
+DEALS.forEach(d => {
+  const key = [d.source, d.target].sort().join("-");
+  linkIndex[key] = (linkIndex[key] || 0) + 1;
+  d.linkIdx = linkIndex[key];
+  d.linkTotal = linkCount[key];
+});
+
+// Layer Y position lookup
+function getLayerY(layerId) {
+  const layer = LAYERS.find(l => l.id === layerId);
+  return layer ? layer.y * height() : height() / 2;
+}
+
+// Draw layer bands (background)
+function drawLayerBands() {
+  layerBackgroundG.selectAll("*").remove();
+
+  LAYERS.forEach((layer, i) => {
+    const yCenter = layer.y * height();
+    const nextLayerY = i < LAYERS.length - 1 ? LAYERS[i+1].y * height() : height();
+    const prevLayerY = i > 0 ? LAYERS[i-1].y * height() : 0;
+    const bandTop = (prevLayerY + yCenter) / 2;
+    const bandBottom = (yCenter + nextLayerY) / 2;
+    const bandHeight = bandBottom - bandTop;
+
+    // alternating tinted bands
+    if (i % 2 === 0) {
+      layerBackgroundG.append("rect")
+        .attr("class", "layer-band")
+        .attr("x", 0)
+        .attr("y", bandTop)
+        .attr("width", width())
+        .attr("height", bandHeight);
+    }
+
+    // dashed divider lines between bands
+    if (i > 0) {
+      layerBackgroundG.append("line")
+        .attr("class", "layer-band-divider")
+        .attr("x1", 0).attr("x2", width())
+        .attr("y1", bandTop).attr("y2", bandTop);
+    }
+
+    // Layer label background + text
+    const labelText = layer.label;
+    const labelX = 16;
+    const labelY = yCenter;
+
+    layerBackgroundG.append("rect")
+      .attr("class", "layer-label-bg")
+      .attr("x", labelX - 4)
+      .attr("y", labelY - 9)
+      .attr("width", labelText.length * 6.2 + 8)
+      .attr("height", 14);
+
+    layerBackgroundG.append("text")
+      .attr("class", "layer-label")
+      .attr("x", labelX)
+      .attr("y", labelY + 1)
+      .attr("dominant-baseline", "middle")
+      .text(labelText);
+  });
+}
+
+drawLayerBands();
+
+// Set initial Y position based on layer
+ENTITIES.forEach(e => {
+  e.targetY = getLayerY(e.layer);
+  e.y = e.targetY;
+  // spread horizontally based on hash of id
+  e.x = (width() / 2) + ((e.id.charCodeAt(0) * 31 + e.id.charCodeAt(1)) % width() - width()/2) * 0.6;
+});
+
+// Force simulation: STRONG Y force locks vertical to layer; X is free
+const simulation = d3.forceSimulation(ENTITIES)
+  .force("link", d3.forceLink(DEALS).id(d => d.id).distance(140).strength(0.3))
+  .force("charge", d3.forceManyBody().strength(-800))
+  .force("collision", d3.forceCollide().radius(d => sizeScale(d.totalValue) + 14))
+  .force("x", d3.forceX(width()/2).strength(0.03))
+  .force("y", d3.forceY(d => getLayerY(d.layer)).strength(1.0)); // strong vertical lock
+
+// Links
+const linkGroup = g.append("g").attr("class", "links");
+const linkElements = linkGroup.selectAll("path")
+  .data(DEALS)
+  .enter()
+  .append("path")
+  .attr("class", "link")
+  .attr("fill", "none")
+  .attr("stroke", d => `var(--${d.type})`)
+  .attr("stroke-width", d => Math.max(1.2, Math.sqrt((d.amountUSD || 1000) / 1000) * 0.6))
+  .attr("opacity", 0.6)
+  .attr("marker-end", d => `url(#arrow-${d.type})`)
+  .on("mouseover", function(event, d) {
+    d3.select(this).attr("opacity", 1).attr("stroke-width", Math.max(1.5, Math.sqrt((d.amountUSD || 1000) / 1000) * 0.6) + 1.5);
+  })
+  .on("mouseout", function(event, d) {
+    d3.select(this).attr("opacity", 0.6).attr("stroke-width", Math.max(1.2, Math.sqrt((d.amountUSD || 1000) / 1000) * 0.6));
+  })
+  .on("click", function(event, d) {
+    event.stopPropagation();
+    showDealDetail(d);
+  });
+
+// Link labels (only show for large deals to reduce clutter)
+const labelGroup = g.append("g").attr("class", "labels");
+const linkLabels = labelGroup.selectAll("text")
+  .data(DEALS.filter(d => d.amountUSD >= 5000))
+  .enter()
+  .append("text")
+  .attr("class", "link-label")
+  .attr("text-anchor", "middle")
+  .text(d => d.amount);
+
+// Nodes
+const nodeGroup = g.append("g").attr("class", "nodes");
+const nodeElements = nodeGroup.selectAll("g.node")
+  .data(ENTITIES)
+  .enter()
+  .append("g")
+  .attr("class", "node")
+  .attr("data-cat", d => d.category)
+  .call(d3.drag()
+    .on("start", dragstarted)
+    .on("drag", dragged)
+    .on("end", dragended))
+  .on("click", function(event, d) {
+    event.stopPropagation();
+    showEntityDetail(d);
+    highlightNode(d.id);
+  });
+
+nodeElements.append("circle")
+  .attr("r", d => sizeScale(d.totalValue))
+  .attr("fill", d => `var(--${d.category})`)
+  .attr("stroke", "var(--ink)")
+  .attr("stroke-width", 1.5);
+
+nodeElements.append("text")
+  .attr("dy", "0.3em")
+  .attr("text-anchor", "middle")
+  .attr("font-family", "Inter Tight, sans-serif")
+  .attr("font-weight", 600)
+  .attr("font-size", d => Math.max(9, Math.min(13, sizeScale(d.totalValue) / 3)))
+  .attr("fill", "white")
+  .text(d => {
+    if (d.ticker && d.ticker.length <= 6 && !d.ticker.includes(".") && !["Private","JV","Sovereign"].includes(d.ticker)) return d.ticker;
+    return d.id.length <= 6 ? d.id : d.id.slice(0,5);
+  });
+
+nodeElements.append("text")
+  .attr("dy", d => sizeScale(d.totalValue) + 14)
+  .attr("text-anchor", "middle")
+  .attr("font-family", "JetBrains Mono, monospace")
+  .attr("font-size", "9px")
+  .attr("fill", "var(--ink)")
+  .attr("opacity", 0.7)
+  .text(d => d.name.length > 18 ? d.name.slice(0, 16) + "…" : d.name);
+
+simulation.on("tick", () => {
+  linkElements.attr("d", d => {
+    const dx = d.target.x - d.source.x;
+    const dy = d.target.y - d.source.y;
+    const dr = Math.sqrt(dx*dx + dy*dy);
+    const curveDir = d.source.id < d.target.id ? 1 : -1;
+    const offset = (d.linkIdx - 1) * 50 * curveDir;
+    const drC = dr + offset;
+    return `M${d.source.x},${d.source.y}A${drC},${drC} 0 0,1 ${d.target.x},${d.target.y}`;
+  });
+  linkLabels.attr("transform", d => {
+    const mx = (d.source.x + d.target.x) / 2;
+    const my = (d.source.y + d.target.y) / 2;
+    return `translate(${mx},${my})`;
+  });
+  nodeElements.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+function dragstarted(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  // Don't lock Y — let simulation pull back to layer
+}
+function dragged(event, d) {
+  d.fx = event.x;
+  // optionally allow some Y drift
+}
+function dragended(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+}
+
+// Zoom
+const zoom = d3.zoom().scaleExtent([0.4, 4]).on("zoom", (event) => {
+  g.attr("transform", event.transform);
+});
+svg.call(zoom);
+
+document.getElementById("zoom-in").onclick = () => svg.transition().call(zoom.scaleBy, 1.4);
+document.getElementById("zoom-out").onclick = () => svg.transition().call(zoom.scaleBy, 0.7);
+document.getElementById("reset").onclick = () => {
+  svg.transition().call(zoom.transform, d3.zoomIdentity);
+  ENTITIES.forEach(d => { d.fx = null; d.fy = null; });
+  simulation.alpha(0.8).restart();
+};
+
+// =========================================================
+// DETAIL PANEL
+// =========================================================
+
+function showEntityDetail(entity) {
+  const incoming = DEALS.filter(d => (d.target === entity.id || (d.target && d.target.id === entity.id)));
+  const outgoing = DEALS.filter(d => (d.source === entity.id || (d.source && d.source.id === entity.id)));
+
+  let html = `<div class="entity-card">
+    <div class="name">${entity.name}</div>
+    <div class="meta">${entity.ticker} · ${entity.category}</div>
+    <div class="desc">${entity.desc}</div>`;
+
+  if (outgoing.length > 0) {
+    html += `<div class="deal-list-title">Outgoing (${outgoing.length})</div>`;
+    outgoing.forEach(d => {
+      const targetId = d.target.id || d.target;
+      const target = ENTITIES.find(e => e.id === targetId);
+      html += `<div class="deal-item">
+        <div class="deal-meta">${d.type} · ${d.date}</div>
+        <div><span class="deal-arrow">→ ${target ? target.name : targetId}</span></div>
+        <div class="deal-amount">${d.amount}</div>
+      </div>`;
+    });
+  }
+
+  if (incoming.length > 0) {
+    html += `<div class="deal-list-title" style="margin-top:12px">Incoming (${incoming.length})</div>`;
+    incoming.forEach(d => {
+      const sourceId = d.source.id || d.source;
+      const source = ENTITIES.find(e => e.id === sourceId);
+      html += `<div class="deal-item">
+        <div class="deal-meta">${d.type} · ${d.date}</div>
+        <div><span class="deal-arrow">← ${source ? source.name : sourceId}</span></div>
+        <div class="deal-amount">${d.amount}</div>
+      </div>`;
+    });
+  }
+
+  html += `</div>`;
+  const panel = document.getElementById("detail-panel");
+  panel.innerHTML = html;
+  panel.classList.remove("empty");
+}
+
+function showDealDetail(d) {
+  const sourceId = d.source.id || d.source;
+  const targetId = d.target.id || d.target;
+  const source = ENTITIES.find(e => e.id === sourceId);
+  const target = ENTITIES.find(e => e.id === targetId);
+
+  const html = `<div class="entity-card">
+    <div class="meta" style="color: var(--${d.type}); font-weight: 600;">${d.type.toUpperCase()} · ${d.date}</div>
+    <div class="name" style="font-size: 16px; margin-top:6px;">${source ? source.name : sourceId} → ${target ? target.name : targetId}</div>
+    <div class="deal-amount" style="font-size:14px; margin: 8px 0;">${d.amount}</div>
+    <div class="desc">${d.desc}</div>
+  </div>`;
+  const panel = document.getElementById("detail-panel");
+  panel.innerHTML = html;
+  panel.classList.remove("empty");
+
+  linkElements.classed("faded", l => l !== d);
+  nodeElements.classed("faded", n => n.id !== sourceId && n.id !== targetId);
+}
+
+function highlightNode(id) {
+  const connected = new Set([id]);
+  DEALS.forEach(d => {
+    const s = d.source.id || d.source;
+    const t = d.target.id || d.target;
+    if (s === id || t === id) {
+      connected.add(s); connected.add(t);
+    }
+  });
+  nodeElements.classed("faded", n => !connected.has(n.id));
+  linkElements.classed("faded", l => {
+    const s = l.source.id || l.source;
+    const t = l.target.id || l.target;
+    return s !== id && t !== id;
+  });
+}
+
+svg.on("click", () => {
+  nodeElements.classed("faded", false);
+  linkElements.classed("faded", false);
+  document.getElementById("detail-panel").classList.add("empty");
+  document.getElementById("detail-panel").innerHTML = "Click a company or deal line to see details. Drag nodes horizontally to reposition; vertical position locked to supply-chain layer. Scroll to zoom.";
+});
+
+// Filters
+const activeTypes = new Set(["equity", "compute", "chip"]);
+const activeCats = new Set(["hyperscaler", "llm", "chipmaker", "neocloud", "equipment", "foundry", "other"]);
+
+document.querySelectorAll(".legend .item").forEach(item => {
+  item.addEventListener("click", () => {
+    const type = item.dataset.type;
+    if (activeTypes.has(type)) { activeTypes.delete(type); item.classList.add("disabled"); }
+    else { activeTypes.add(type); item.classList.remove("disabled"); }
+    applyFilters();
+  });
+});
+document.querySelectorAll(".chip[data-cat]").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const cat = chip.dataset.cat;
+    if (activeCats.has(cat)) { activeCats.delete(cat); chip.classList.remove("active"); }
+    else { activeCats.add(cat); chip.classList.add("active"); }
+    applyFilters();
+  });
+});
+
+function applyFilters() {
+  linkElements.style("display", d => activeTypes.has(d.type) ? null : "none");
+  linkLabels.style("display", d => activeTypes.has(d.type) ? null : "none");
+  nodeElements.style("display", d => activeCats.has(d.category) ? null : "none");
+}
+
+document.getElementById("search-input").addEventListener("input", (e) => {
+  const term = e.target.value.toLowerCase().trim();
+  if (!term) {
+    nodeElements.classed("faded", false);
+    linkElements.classed("faded", false);
+    return;
+  }
+  const matches = new Set();
+  ENTITIES.forEach(en => {
+    if (en.name.toLowerCase().includes(term) || en.ticker.toLowerCase().includes(term) ||
+        en.id.toLowerCase().includes(term) || en.desc.toLowerCase().includes(term)) {
+      matches.add(en.id);
+    }
+  });
+  DEALS.forEach(d => {
+    if (d.amount.toLowerCase().includes(term) || d.desc.toLowerCase().includes(term) ||
+        d.date.toLowerCase().includes(term)) {
+      matches.add(d.source.id || d.source);
+      matches.add(d.target.id || d.target);
+    }
+  });
+  nodeElements.classed("faded", n => !matches.has(n.id));
+  linkElements.classed("faded", l => {
+    const s = l.source.id || l.source;
+    const t = l.target.id || l.target;
+    return !matches.has(s) || !matches.has(t);
+  });
+});
+
+window.addEventListener("resize", () => {
+  drawLayerBands();
+  ENTITIES.forEach(e => { e.fy = null; });
+  simulation.force("y", d3.forceY(d => getLayerY(d.layer)).strength(1.0));
+  simulation.alpha(0.5).restart();
+});
+</script>
+
+</body>
+</html>

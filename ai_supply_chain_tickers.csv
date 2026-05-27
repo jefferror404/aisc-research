@@ -1,0 +1,89 @@
+Layer,Ticker_yfinance,Ticker_Native,Company,Country,Category,Notes
+L0,VRT,VRT,Vertiv Holdings,US,DC Power & Cooling,#1 AI cooling & power; +270% LTM
+L0,SU.PA,SU.PA,Schneider Electric,France,DC Electrical,#1 DC switchgear/UPS/cooling diversified
+L0,ETN,ETN,Eaton Corporation,US,DC Electrical,Switchgear + transformers; multi-yr backlog
+L0,6367.T,6367.T,Daikin Industries,Japan,DC Cooling,AI DC cooling FY30 ~$2B target; DDC + Chilldyne
+L0,JCI,JCI,Johnson Controls,US,DC Cooling,YORK chillers; Accelsius investment
+L0,TT,TT,Trane Technologies,US,DC Cooling,Chillers + AI thermal
+L0,GEV,GEV,GE Vernova,US,Power Equipment,Gas turbines + grid HVDC; Q1 26 DC orders $2.4B
+L0,BE,BE,Bloom Energy,US,Fuel Cells,SOFC; Oracle 2.8 GW Project Jupiter; +400% LTM
+L0,CWR.L,CWR.L,Ceres Power Holdings,UK,Fuel Cells,SOFC licensor; Doosan + Weichai partners; +237% YTD
+L0,336260.KS,336260.KS,Doosan Fuel Cell,South Korea,Fuel Cells,SOFC manufacturer; Ceres licensee
+L0,FCEL,FCEL,FuelCell Energy,US,Fuel Cells,Molten Carbonate; 1.5 GW DC pipeline
+L0,BWXT,BWXT,BWX Technologies,US,Nuclear/SMR,BANR SMR for DC; $7.3B backlog (+50%)
+L0,CEG,CEG,Constellation Energy,US,Nuclear Power,33 GW nuclear (#1 US); MSFT Three Mile Island
+L0,VST,VST,Vistra,US,Mixed Power,44 GW (nuclear + gas); AWS/Meta PPAs
+L0,TLN,TLN,Talen Energy,US,Power,AWS 960 MW Pennsylvania
+L0,NEE,NEE,NextEra Energy,US,Renewables,70 GW (#1 US renewables)
+L0,CCJ,CCJ,Cameco,Canada,Uranium,Nuclear fuel for AI generation
+L1,SNPS,SNPS,Synopsys,US,EDA,EDA #1; +Ansys $35B closed Jul 25
+L1,CDNS,CDNS,Cadence Design Systems,US,EDA,EDA #2; gen-AI placement tools
+L1,ARM,ARM,Arm Holdings,UK,CPU IP,CPU IP licensor; royalties on virtually every AI device
+L1,ASML,ASML,ASML Holding,Netherlands,Lithography,EUV monopoly; High-NA $380M/unit
+L1,AMAT,AMAT,Applied Materials,US,Equipment,Broadest WFE portfolio
+L1,LRCX,LRCX,Lam Research,US,Equipment,Etch leader; memory equipment #1
+L1,KLAC,KLAC,KLA Corporation,US,Equipment,Metrology ~50% segment share
+L1,8035.T,8035.T,Tokyo Electron,Japan,Equipment,Coater/developer + etch
+L1,6857.T,6857.T,Advantest,Japan,Test Equipment,HBM + AI SoC tester dominant
+L1,6920.T,6920.T,Lasertec,Japan,EUV Inspection,Monopoly in EUV photomask defect inspection
+L1,6146.T,6146.T,Disco Corporation,Japan,Equipment,Wafer dicing/grinding niche monopoly
+L1,042700.KS,042700.KS,Hanmi Semiconductor,South Korea,HBM Bonders,71% global HBM TC bonder share
+L1,BESI.AS,BESI.AS,BE Semiconductor Industries,Netherlands,HBM Bonders,Micron HBM4 sole-source TC bonder
+L1,7741.T,7741.T,Hoya Corporation,Japan,Photomask Blanks,60%+ photomask; 75%+ EUV mask blanks
+L1,4063.T,4063.T,Shin-Etsu Chemical,Japan,Silicon Wafers,#1 silicon wafer (~33% share) + photoresist
+L1,Q,Q,Qnity Electronics,US,Semi Materials,NEW Nov 2025 DuPont spinoff; $4.7B revenue
+L2,TSM,TSM,Taiwan Semiconductor (TSMC),Taiwan,Foundry,69.9% pure-play foundry share; sole CoWoS
+L2,005930.KS,005930.KS,Samsung Electronics,South Korea,Foundry+Memory,7.2% foundry; 33% DRAM; 22% HBM
+L2,688981.SH,688981.SS,SMIC,China,Foundry,5.32% foundry; restricted to 7nm/5nm
+L2,INTC,INTC,Intel,US,Foundry+Chips,Building 18A; 10% US gov't stake
+L2,ASX,ASX,ASE Technology Holding,Taiwan,OSAT,#1 OSAT (advanced packaging)
+L2,AMKR,AMKR,Amkor Technology,US,OSAT,#2 OSAT; Arizona TSMC-adjacent fab
+L3,000660.KS,000660.KS,SK Hynix,South Korea,Memory,57% HBM; ~70% HBM4 for NVIDIA Rubin
+L3,005930.KS,005930.KS,Samsung Electronics,South Korea,Memory,22% HBM; 33% DRAM (also in L2)
+L3,MU,MU,Micron Technology,US,Memory,21% HBM; 26% DRAM; sold out 2026
+L3,SNDK,SNDK,Sandisk,US,NAND Storage,#1 pure-play NAND; +492% YTD; HBF AI thesis
+L3,WDC,WDC,Western Digital,US,Storage,HDD oligopoly; +77% YTD / +850% LTM
+L3,STX,STX,Seagate Technology,US,Storage,HDD (Mozaic); only 3 HDD players; +65% YTD
+L4,NVDA,NVDA,NVIDIA,US,AI Accelerator,86-90% AI accelerator share; $194B FY26 DC
+L4,AMD,AMD,Advanced Micro Devices,US,AI Accelerator,5-7% share; OpenAI 6 GW deal + 10% warrant
+L4,AVGO,AVGO,Broadcom,US,AI Accelerator+Net,Custom ASIC (Google TPU; Meta MTIA); ~$28B AI
+L4,MRVL,MRVL,Marvell Technology,US,AI Accelerator+Net,AWS Trainium silicon; optical DSPs
+L4,CBRS,CBRS,Cerebras Systems,US,AI Accelerator,May 2026 IPO; wafer-scale inference; $10B OpenAI
+L4,MPWR,MPWR,Monolithic Power Systems,US,Power Mgmt IC,Critical GPU power management ICs
+L5,DELL,DELL,Dell Technologies,US,Servers,AI server $25B+ FY26 (+150%); $14B backlog
+L5,SMCI,SMCI,Super Micro Computer,US,Servers,9.5% server share; pure-play AI server
+L5,2317.TW,2317.TW,Foxconn (Hon Hai),Taiwan,ODM,Largest ODM globally; primary NVIDIA rack ODM
+L5,2308.TW,2308.TW,Delta Electronics,Taiwan,DC PSU,#1 DC PSU; PSU for NVIDIA racks
+L6,ANET,ANET,Arista Networks,US,Networking,19% DC switch share; Meta + MSFT anchors
+L6,CSCO,CSCO,Cisco Systems,US,Networking,14% DC switch; 29.8% total Ethernet
+L6,NOK,NOK,Nokia,Finland,Networking/AI-RAN,NVIDIA $1B stake; AI-RAN partnership; +73% YTD
+L6,LITE,LITE,Lumentum Holdings,US,Optics,EMLs + 1.6T transceivers + OCS; +1474% LTM
+L6,COHR,COHR,Coherent Corp,US,Optics,Transceivers + SiPho; NVIDIA $2B; +97% YTD
+L6,AAOI,AAOI,Applied Optoelectronics,US,Optics,800G AI DC transceivers; +441% YTD
+L6,GLW,GLW,Corning Incorporated,US,Optical Fiber,Meta $6B deal; Q1 26 optical $1.8B (+36%)
+L6,ALAB,ALAB,Astera Labs,US,Interconnect,PCIe/CXL ICs; AI rack-scale
+L6,CRDO,CRDO,Credo Technology,US,Interconnect,Active Electrical Cables (AECs)
+L7,EQIX,EQIX,Equinix,US,DC REIT,#1 retail colo + interconnection; $9.2B FY25
+L7,DLR,DLR,Digital Realty Trust,US,DC REIT,#1 wholesale colo; $6.1B FY25
+L7,PWR,PWR,Quanta Services,US,DC Construction,Grid + DC electrical contractor
+L7,FIX,FIX,Comfort Systems USA,US,DC Construction,DC mechanical + electrical contractor
+L8,MSFT,MSFT,Microsoft,US,Hyperscaler,Azure 21-25%; AI run rate $37B (+123%); 27% OpenAI
+L8,AMZN,AMZN,Amazon,US,Hyperscaler,AWS 30%; Trainium $20B run rate; Anthropic anchor
+L8,GOOGL,GOOGL,Alphabet,US,Hyperscaler,Cloud +63%; $460B backlog; Gemini 12% LLM share
+L8,ORCL,ORCL,Oracle,US,Hyperscaler,Stargate; OpenAI ~$300B deal from 2027
+L8,9988.HK,9988.HK,Alibaba,China,Hyperscaler,~4% global cloud share; Qwen models
+L8,CRWV,CRWV,CoreWeave,US,Neocloud,Pure neocloud; $22.4B OpenAI; NVDA $2B equity
+L8,NBIS,NBIS,Nebius Group,US (Netherlands),Neocloud,European challenger; NVIDIA $2B equity
+L8,IREN,IREN,IREN Limited,Australia,Neocloud (ex-miner),MSFT $9.7B anchor
+L8,WULF,WULF,TeraWulf,US,Neocloud (ex-miner),$12.8B HPC; HPC > BTC Q1 26
+L8,HUT,HUT,Hut 8 Corp,US,Neocloud (ex-miner),$7B Google/Fluidstack 15-yr lease
+L8,CIFR,CIFR,Cipher Mining,US,Neocloud (ex-miner),$5.5B 15-yr AWS lease
+L9,MSFT,MSFT,Microsoft (OpenAI 27%),US,LLM exposure,Indirect — owns 27% of OpenAI ($135B stake)
+L9,GOOGL,GOOGL,Alphabet (Gemini),US,LLM,Gemini 12.1% LLM revenue share
+L9,META,META,Meta Platforms,US,LLM,Llama open-source; 1.4% LLM revenue share
+L9,AMZN,AMZN,Amazon (Anthropic),US,LLM exposure,Indirect — $33B+ invested in Anthropic
+L9,700.HK,0700.HK,Tencent,China,LLM,Hunyuan; 4.8% Chinese
+L9,BIDU,BIDU,Baidu,China,LLM,Ernie; largest Chinese consumer chatbot
+L10,MSFT,MSFT,Microsoft (Copilot),US,Apps,Copilot suite + GitHub Copilot
+L10,GOOGL,GOOGL,Alphabet (Gemini App),US,Apps,Gemini App + Workspace AI
+Adjacent,ASML,ASML,ASML Holding,Netherlands,Semicap,Already in L1; cross-listed for reference
