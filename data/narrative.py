@@ -866,6 +866,23 @@ MARGIN_FOCUS = {
     "L0":  ("om", "<b>Operating margin</b> is the read for the equipment franchises (Vertiv ~18%); for the utilities, lean on EBITDA and contracted-return visibility instead."),
 }
 
+# Which VALUATION multiple to anchor on per layer, plus the special characteristic that
+# makes the layer's valuation read differently from a generic P/E. Rendered as a blue
+# "Valuation lens that matters" callout in each layer's Key-Metrics card.
+VALUATION_FOCUS = {
+    "L10": "Anchor on <b>EV/Sales + the Rule of 40</b> (growth % + FCF margin), not P/E — most apps are private and reinvesting, so they are priced on growth and net revenue retention, not earnings. The trap: an app's revenue multiple is only justified if its gross margin survives the next model price cut.",
+    "L9":  "There is no public multiple — labs are priced in private rounds on <b>EV / forward-ARR</b> (OpenAI ~$852B on ~$25B ARR ≈ 34×; Anthropic ~$350B on ~$30B ≈ 12×). The special characteristic: GAAP earnings are deeply negative <i>by design</i> while training the next model, so any P/E is meaningless — you are underwriting revenue growth and capability, financed by a hyperscaler's balance sheet.",
+    "L8":  "Hyperscalers: watch <b>EV/EBITDA and — above all — free cash flow</b>. This cycle's defining feature is that the capex surge is <b>compressing FCF hard</b>: BofA estimates 2026 capex eats ~94% of operating cash flow after dividends, vs a ~40% ten-year norm.[[cite:bofa]] So track <b>FCF margin, FCF conversion (FCF ÷ net income) and capex-to-OCF</b> — a rising capex/OCF with falling FCF is the single most important risk signal here. Neoclouds are GAAP- and FCF-negative, so value them on <b>EV / contracted RPO</b> instead.",
+    "L7":  "REITs are valued on <b>P/AFFO and EV/EBITDA</b>, never P/E — heavy depreciation makes net income misleading, and AFFO is the real cash-flow proxy. Also watch dividend coverage and leased-backlog. Contractors (PWR, FIX, EME) trade on <b>P/E + EV/EBITDA against backlog and book-to-bill</b>.",
+    "L6":  "Switching leaders (Arista) on <b>forward P/E + PEG</b>; optics names (Lumentum, Coherent, AAOI) on <b>EV/EBITDA</b> but with eyes open — they carry the chain's highest cycle risk, trading near ~50× forward earnings on the assumption the LTA-backed boom runs uninterrupted through 2027. The multiple <i>is</i> the risk.",
+    "L5":  "<b>EV/EBITDA and P/E look optically cheap and should</b> — the thesis here is revenue beta, not margin. Anchor on <b>ROIC and working-capital intensity</b> (huge GPU inventory) rather than the multiple; a low P/E on a 5–7% gross-margin box-assembler is not 'value'.",
+    "L4":  "NVIDIA on <b>forward P/E + PEG</b> looks deceptively cheap (~17× forward on triple-digit growth → a sub-0.5 PEG). The real debate is not the multiple but <b>earnings durability</b>: NVIDIA captures ~⅓ of all AI capex as profit, and the bear case is that ASIC substitution or a demand air-pocket de-rates the most over-earning name in tech. Watch gross-margin trajectory as the tell.",
+    "L3":  "This is the most misread layer. <b>Do NOT anchor on forward P/E</b> — memory is deeply cyclical, so a low forward P/E (SK Hynix ~5×, Micron ~8×) signals <i>peak</i> earnings the market expects to mean-revert, not cheapness; the multiple is lowest exactly when earnings are about to roll. Value it through the cycle on <b>P/B and EV/EBITDA against mid-cycle earnings</b>, and let <b>contract-price direction</b> (not the P/E) tell you where the cycle is.",
+    "L2":  "TSMC on <b>forward P/E + EV/EBITDA</b>. The special feature is a persistent <b>geopolitical (Taiwan) discount</b> on the multiple relative to the quality of the monopoly — you are paid to hold single-country concentration risk. OSATs trade on ordinary <b>P/E + EV/EBITDA</b>.",
+    "L1":  "EDA (Synopsys, Cadence) earns a premium <b>forward P/E</b> on ~95%-incremental-margin recurring software — value it like SaaS. Equipment makers (ASML, AMAT, Lam, KLA) on <b>P/E + EV/EBITDA against order backlog and book-to-bill</b>; the swing factor on the multiple is China-revenue exposure under export controls.",
+    "L0":  "Equipment franchises (Vertiv, Eaton, GE Vernova) on <b>EV/EBITDA + P/E against backlog and book-to-bill</b> — backlog growth matters more than current earnings in a supply-constrained layer. Utilities (Constellation, Vistra, Talen) on <b>EV/EBITDA + contracted-PPA visibility and rate-base growth</b>, not headline P/E.",
+}
+
 # Extra charts merged AFTER each layer's existing `charts`. Same schema as LAYER_CONTENT charts.
 EXTRA_CHARTS = {
     "L9": [

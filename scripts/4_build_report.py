@@ -608,13 +608,18 @@ def render_layer_head(lc, layer):
     if mf:
         margin_line = (f'<div class="metricmargin"><span class="mmtag">Margin that matters</span>'
                        f'{esc_html_keep(mf[1])}</div>')
+    vf = N.VALUATION_FOCUS.get(layer) if hasattr(N, "VALUATION_FOCUS") else None
+    val_line = ""
+    if vf:
+        val_line = (f'<div class="metricval"><span class="mvtag">Valuation lens that matters</span>'
+                    f'{esc_html_keep(vf)}</div>')
     left = (
         f'<div class="infocard"><h4>What this layer does</h4>'
         f'<p>{esc_html_keep(lc["what_it_does"])}</p></div>'
         f'<div class="infocard"><h4>Who pays whom</h4>'
         f'<p>{esc_html_keep(lc["who_pays_whom"])}</p></div>'
         f'<div class="infocard"><h4>Key Metrics to Track</h4>'
-        f'<p>{esc_html_keep(lc["how_to_analyze"])}</p>{margin_line}</div>'
+        f'<p>{esc_html_keep(lc["how_to_analyze"])}</p>{margin_line}{val_line}</div>'
     )
     stance = (f'<div class="stance"><span class="stag">My stance</span>'
               f'{esc_html_keep(lc["stance"])}</div>') if lc.get("stance") else ""
@@ -895,6 +900,8 @@ figure.chart .legend tr[data-k].hi{background:#eef2fb}
 .infocard h4{margin:0 0 5px}.infocard p{margin:0;font-size:13.5px;line-height:1.5}
 .metricmargin{margin-top:9px;background:#f7faf8;border:1px solid #d7e7df;border-radius:8px;padding:7px 10px;font-size:12.5px;color:#1f5740}
 .metricmargin .mmtag{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:#0a8f5b;margin-bottom:2px}
+.metricval{margin-top:7px;background:#f4f7fe;border:1px solid #d3defa;border-radius:8px;padding:7px 10px;font-size:12.5px;color:#27407e}
+.metricval .mvtag{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:#2547d0;margin-bottom:2px}
 .lhright .take{margin:0;width:100%;display:flex;flex-direction:column;justify-content:center}
 /* ---- sub-segment cards ---- */
 .subseg h4{margin:0 0 8px}
