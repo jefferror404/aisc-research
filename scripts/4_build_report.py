@@ -722,7 +722,7 @@ def build():
     # numbers run in document order, then append the References section.
     body = f'''
   <section id="summary">
-    <div class="whatsnew"><h3>What’s new in v12</h3><ul>{whatsnew}</ul></div>
+    <div class="whatsnew"><h3>What’s new in v13</h3><ul>{whatsnew}</ul></div>
     <h2>1 · Executive Summary</h2>
     <p>This is my map of the AI supply chain, eleven layers deep — from the apps people pay for (L10)
     down to the electricity that powers it all (L0). Each layer opens with what it does, then <b>my

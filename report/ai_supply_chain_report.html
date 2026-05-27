@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The AI Supply Chain — An Equity Research Deep-Dive — v12</title>
+<title>The AI Supply Chain — An Equity Research Deep-Dive — v13</title>
 <style>
 :root{--ink:#1a1f2b;--muted:#5b6577;--line:#e3e7ee;--bg:#fbfcfe;--card:#fff;
   --accent:#2547d0;--green:#0a8f5b;--amber:#b9770a;--red:#c0392b;--hi:#0a8f5b;}
@@ -189,7 +189,7 @@ table.comp.facts{min-width:520px}table.comp.facts td.lbl{font-weight:600;color:#
   <div class="wrap">
     <div class="kicker">11 Layers · Bottlenecks · Market Sizes · Value Capture · Live Comps</div>
     <h1>The AI Supply Chain</h1>
-    <div class="subtitle">An Equity Research Deep-Dive — v12 · Coverage May 2026</div>
+    <div class="subtitle">An Equity Research Deep-Dive — v13 · Coverage May 2026</div>
     <div class="snap">Market data snapshot: <b>2026-05-28</b> · refresh with <code>3_refresh_market.py</code></div>
   </div>
 </header>
@@ -201,7 +201,7 @@ table.comp.facts{min-width:520px}table.comp.facts td.lbl{font-weight:600;color:#
 <main class="wrap">
   
   <section id="summary">
-    <div class="whatsnew"><h3>What’s new in v12</h3><ul><li>Each layer now opens with a <b>two-column header</b>: three info cards (What this layer does / Who pays whom / Key Metrics to Track) on the left, my <b>Analyst’s Take</b> and stance on the right.</li><li>New <b>AI revenue % of total</b> column on every comp table (curated estimate; pure-plays = 100%), plus a <b>Δ % YoY</b> revenue-growth column.</li><li>Every layer flags the <b>margin that matters</b> (gross / operating / EBITDA) and highlights that column in the table.</li><li>Many more <b>charts</b>: annual LLM-revenue trend, per-hyperscaler &amp; historical capex, optical / fiber / AI-RAN, GPU / ASIC / CPU, DRAM / NAND / HDD, WFE &amp; EDA splits — plus a TSMC capacity-trajectory table.</li><li>Coverage added: <b>Meta &amp; Tencent</b> (L8 capex / cloud), <b>Alibaba</b> (L9), <b>EMCOR</b> (L7 contractors); L9 now shows each backer’s LLM ownership stake.</li><li>Sub-segments redesigned as cards; the GPU/CPU/ASIC explainer rebuilt on a readable light theme; first-person analyst voice and clickable source footnotes throughout.</li><li>Still a single scrollable HTML file backed by a refreshable SQLite database + one-command yfinance refresh.</li></ul></div>
+    <div class="whatsnew"><h3>What’s new in v13</h3><ul><li><b>Every chart is now interactive</b> — hover any slice, bar or column for a tooltip; the matching series highlights and the legend syncs both ways.</li><li><b>Full valuation suite</b> on every comp table: EV/EBITDA, P/FCF, FCF margin, P/B and PEG, alongside the existing P/E, forward P/E and P/S (snapshot refreshed 2026-05-28).</li><li>Each layer flags both the <b>margin that matters</b> and the <b>valuation lens that matters</b> — e.g. FCF / capex-to-OCF for the clouds, through-cycle P/B for memory.</li><li><b>Key risks now live inside each layer</b> as a red callout (the old standalone Risks section is gone) — funding/FCF in L8, ASIC substitution in L4, the memory cycle in L3, Taiwan in L2, power in L0, and so on.</li><li>New <b>stacked history-and-forecast charts</b> (per-hyperscaler capex, GPU vs ASIC vs CPU, memory by segment) plus market-share charts for ODMs, optics, OSAT and the niche tool leaders; the cloud chart now shows absolute $ alongside share.</li><li>L8 split into <b>US hyperscalers / Chinese cloud / neoclouds</b>; the value-capture map now spans all layers L10→L0.</li><li>Still a single scrollable, self-contained HTML file (now with a little inline JS for the charts) backed by a refreshable SQLite database + one-command yfinance refresh.</li></ul></div>
     <h2>1 · Executive Summary</h2>
     <p>This is my map of the AI supply chain, eleven layers deep — from the apps people pay for (L10)
     down to the electricity that powers it all (L0). Each layer opens with what it does, then <b>my
@@ -324,7 +324,7 @@ table.comp.facts{min-width:520px}table.comp.facts td.lbl{font-weight:600;color:#
     data via Yahoo Finance (snapshot 2026-05-28); segment, contract and backlog data from company
     filings and earnings releases. Figures are estimates and may contain errors — verify against
     primary sources before acting.</p>
-    <p class="note">Generated 2026-05-28 01:12 from data/aisc.db + data/narrative.py.</p></footer>
+    <p class="note">Generated 2026-05-28 01:19 from data/aisc.db + data/narrative.py.</p></footer>
 </main>
 <script>
 (function(){

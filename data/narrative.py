@@ -12,17 +12,17 @@ Coverage date: May 2026. Severity scale for bottlenecks: LOW < MEDIUM < HIGH < E
 
 META = {
     "title": "The AI Supply Chain",
-    "subtitle": "An Equity Research Deep-Dive — v12",
+    "subtitle": "An Equity Research Deep-Dive — v13",
     "tagline": "11 Layers · Bottlenecks · Market Sizes · Value Capture · Live Comps",
     "coverage_date": "May 2026",
     "whats_new": [
-        "Each layer now opens with a <b>two-column header</b>: three info cards (What this layer does / Who pays whom / Key Metrics to Track) on the left, my <b>Analyst’s Take</b> and stance on the right.",
-        "New <b>AI revenue % of total</b> column on every comp table (curated estimate; pure-plays = 100%), plus a <b>Δ % YoY</b> revenue-growth column.",
-        "Every layer flags the <b>margin that matters</b> (gross / operating / EBITDA) and highlights that column in the table.",
-        "Many more <b>charts</b>: annual LLM-revenue trend, per-hyperscaler &amp; historical capex, optical / fiber / AI-RAN, GPU / ASIC / CPU, DRAM / NAND / HDD, WFE &amp; EDA splits — plus a TSMC capacity-trajectory table.",
-        "Coverage added: <b>Meta &amp; Tencent</b> (L8 capex / cloud), <b>Alibaba</b> (L9), <b>EMCOR</b> (L7 contractors); L9 now shows each backer’s LLM ownership stake.",
-        "Sub-segments redesigned as cards; the GPU/CPU/ASIC explainer rebuilt on a readable light theme; first-person analyst voice and clickable source footnotes throughout.",
-        "Still a single scrollable HTML file backed by a refreshable SQLite database + one-command yfinance refresh.",
+        "<b>Every chart is now interactive</b> — hover any slice, bar or column for a tooltip; the matching series highlights and the legend syncs both ways.",
+        "<b>Full valuation suite</b> on every comp table: EV/EBITDA, P/FCF, FCF margin, P/B and PEG, alongside the existing P/E, forward P/E and P/S (snapshot refreshed 2026-05-28).",
+        "Each layer flags both the <b>margin that matters</b> and the <b>valuation lens that matters</b> — e.g. FCF / capex-to-OCF for the clouds, through-cycle P/B for memory.",
+        "<b>Key risks now live inside each layer</b> as a red callout (the old standalone Risks section is gone) — funding/FCF in L8, ASIC substitution in L4, the memory cycle in L3, Taiwan in L2, power in L0, and so on.",
+        "New <b>stacked history-and-forecast charts</b> (per-hyperscaler capex, GPU vs ASIC vs CPU, memory by segment) plus market-share charts for ODMs, optics, OSAT and the niche tool leaders; the cloud chart now shows absolute $ alongside share.",
+        "L8 split into <b>US hyperscalers / Chinese cloud / neoclouds</b>; the value-capture map now spans all layers L10→L0.",
+        "Still a single scrollable, self-contained HTML file (now with a little inline JS for the charts) backed by a refreshable SQLite database + one-command yfinance refresh.",
     ],
     "data_note": (
         "Valuation and margin data are pulled live from Yahoo Finance via yfinance and stored in a "

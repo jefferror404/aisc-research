@@ -1,6 +1,28 @@
 # AI Supply Chain Equity Research — Project State Document
-## Last Updated: May 27, 2026
-## Current Version: v12 (card-layout report, per-layer charts, AI-rev% column, live on GitHub Pages)
+## Last Updated: May 28, 2026
+## Current Version: v13 (interactive charts, full valuation suite, per-layer key risks)
+
+---
+
+## 00. v13 — Interactive Charts, Full Valuation Suite, Risks-in-Layers (May 28, 2026)
+
+Three review batches on top of v12 (same DB + scripts). Edits in `data/narrative.py`, all four `scripts/`, and the builder. Report grew ~230 KB → ~290 KB. **Market snapshot re-run to 2026-05-28** (a full `3_refresh_market.py`, so all valuation/margin numbers rolled from 2026-05-26). Verified via gstack `browse` (no console errors; 30 charts, interactivity + new columns + 11 key-risk callouts all render).
+
+**Interactive charts (all of them):** vanilla-JS `CHART_JS` (no framework, still one self-contained file). Hovering any segment/bar/column shows a styled floating tooltip, highlights the matching series, dims the rest, and syncs legend↔chart both ways via a shared `data-k` key. `svg_donut`/`svg_bars`/`svg_stacked_cols` emit `data-k`+`data-tip`; legend rows carry the same. CSS `.charttip`/`.dim`/`.hi`.
+
+**New chart type + more charts:** `svg_stacked_cols` (vertical stacked columns with totals) for multi-year history+forecast. New stacked charts: §2 **per-company capex 2023→2026E** + 5 per-hyperscaler bars; L4 **GPU vs ASIC vs CPU market size**; L3 **DRAM/HBM/NAND/HDD market size**. New share charts: L5 **ODM/OEM/PSU**, L6 **silicon photonics**, L4 **power-IC**, L2 **OSAT + TSMC platform-mix** (answers "what's the non-HPC 39%?"), L1 **specialty/niche leaders**. Sub-segment cards now **dropped on any layer that has a covering chart** (kept only on L10/L7/L0).
+
+**L8 restructured into 3 tables:** sub-layers reordered by `MIN(sort_order)` so the comp table renders **US hyperscaler → Chinese cloud → Neocloud** (Meta moved into US hyperscalers, 5th; Alibaba+Tencent split into Chinese cloud). Oracle cloud-share corrected to ~45% (was an inconsistent "~60%+").
+
+**§3 value-capture:** added **L10 + L9** rows (flagged demand-side) and sorted the table **L10→L0**.
+
+**Full valuation suite (new comp columns):** **EV/EBITDA, P/FCF, FCF Margin** (Phase 2) + **P/B, PEG** (later). New `market_data` columns: `free_cash_flow_usd`, `ebitda_usd`, `enterprise_value_usd`, `price_to_book`, `peg_ratio`. FCF/EBITDA converted from financial currency, EV from trading currency (so ratios are comparable USD). **EV/EBITDA is sanity-gated**: suppressed to "—" when yfinance's EV is currency-distorted (outside 0.3–3× of market cap — hits TSM/ASX/BIDU/CBRS). P/FCF shows "neg" for cash-burning names (neoclouds). P/B + PEG are pre-computed ratios, currency-neutral. Column order is now grouped: …Gross/Operating/EBITDA/**FCF** margin | Market Cap | P/E/Fwd P/E/**PEG**/P/S/**P/B**/EV/EBITDA/P/FCF | EPS Growth | Backlog. The in-table "margin that matters" highlight was **removed** (callouts kept).
+
+**Per-layer "Valuation lens that matters"** callout (`VALUATION_FOCUS` dict, blue, parallel to the green margin callout) on all 11 layers — e.g. L8 FCF/capex-to-OCF, L3 through-cycle P/B vs misleading low P/E, L4 PEG/earnings-durability, L9 EV/forward-ARR, L7 P/AFFO.
+
+**§5 Key Risks dissolved into the layers:** new `KEY_RISKS` dict → a red **"Key risk"** callout in every layer header. The 8 old risks were folded to their home layer (capex-gap+funding→L8, circular→L9, ASIC→L4, memory→L3, optics→L6, Taiwan→L2, power→L0; L10/L7/L5/L1 curated). Standalone §5 removed; **Deal Web → §5, Sources → §6**; "Risks" dropped from nav.
+
+**Misc fixes:** the `<b>`-in-segment-cell bug (seg cell now uses `esc_html_keep`); the `&amp;`-double-escape in three chart titles; cloud chart shows absolute $ alongside %.
 
 ---
 
@@ -141,6 +163,7 @@ Interactive D3.js force-directed graph showing all major deals. v9 version is LA
 | v10 | **Architecture pivot: SQLite DB + yfinance refresh pipeline + scrollable HTML report** (replaces static docx). Every public name now carries a full live comp set (FY rev, FY+1E, GM/OM/EBITDA, mkt cap, P/E TTM, fwd P/E, P/S, earnings growth) + segment-% of total. GPU vs CPU vs ASIC deep-dive added to L4. $725B "top flow vs total market" answered in §2. Bottleneck/Market/Value blocks expanded from bullets to full analysis. Contract durations added to every major deal. Deal elaboration paragraphs after each layer table. Network graph untouched (per user). |
 | v11 | **Analyst-voice overhaul + live hosting.** First-person Analyst's Take + investment stance per layer. Clickable numbered footnotes → §8 Sources & References (SOURCES registry). Inline SVG donuts/bars for share data. Per-layer slice of the $725B funnel in Market Size. §2 restructured (table 2.1 leads, takeaway below + sourced). §3 numbering fixed (3.1/3.2/3.3). L9 share tables restored as charts. Comp columns relabelled. Published to GitHub Pages (public repo `jefferror404/aisc-research`). |
 | v12 | **Card layout + charts everywhere + AI-rev% column.** Two-column layer header (3 info cards incl. Key Metrics to Track + Analyst's Take). New AI-rev-%-of-total and Δ%-YoY comp columns; per-layer "margin that matters" with highlighted column. Charts added across L9 (LLM trend), L8 (per-co + historical capex), L6 (optical/fiber/AI-RAN), L4 (GPU/ASIC/CPU), L3 (DRAM/NAND/HDD), L1 (WFE/EDA); TSMC capacity table re-added. Meta+Tencent added to L8, Alibaba to L9, EMCOR to L7; L9 ownership stakes shown. Sub-segments as cards; GPU/CPU/ASIC box light-themed. Sub-$1B revenue shown in millions. |
+| v13 | **Interactive charts + full valuation suite + risks-in-layers.** All charts interactive (JS hover tooltip + highlight + legend sync). New `svg_stacked_cols` for multi-year history/forecast (§2 per-company capex, L4 GPU/ASIC/CPU size, L3 memory size); added L5 ODM/OEM/PSU, L6 SiPho, L2 OSAT + TSMC platform-mix, L1 niche-leader charts. New comp columns EV/EBITDA, P/FCF, FCF margin, P/B, PEG (FCF/EV/EBITDA fetched + USD-converted; EV/EBITDA gated for distorted ADRs). Per-layer "Valuation lens that matters" callout. §5 Key Risks dissolved into per-layer red "Key risk" callouts (Deal Web→§5, Sources→§6). L8 split into US-hyperscaler / Chinese-cloud / Neocloud tables; §3 value-capture gained L10/L9 and sorts L10→L0. Snapshot refreshed to 2026-05-28. |
 
 ---
 
@@ -280,6 +303,14 @@ These are cases where the user caught errors or I self-corrected after deeper re
 - **(v11) Wants share/ranking data as small tables or charts**, not run-on sentences
 - **(v11) Wants each layer's Market Size to show its slice of the $725B capex** alongside the researched TAM
 - **(v11) Wants the report public/shareable** — hosted live on GitHub Pages; will keep updating it
+- **(v12) Wants a card/box layout** for what-it-does / who-pays-whom / key-metrics + Analyst's Take; sub-segments as cards or charts, not wide bullet lists
+- **(v12) Wants "How to analyze" renamed "Key Metrics to Track"**, and a `What this layer does` heading at the top of each layer
+- **(v12) Wants an AI-revenue-%-of-total column** on every table (pure-play = 100%) and a Δ%-YoY revenue-growth column; sub-$1B revenues shown in millions
+- **(v12) Wants market-share charts per sub-segment**, dropping the text sub-segment list where a chart covers it
+- **(v13) Wants all charts interactive** (hover to see data points) — delivered with inline vanilla JS, no framework
+- **(v13) Wants the full valuation suite** — analyze which multiple matters per layer (the `VALUATION_FOCUS` callouts) AND show EV/EBITDA, P/FCF, FCF margin, P/B, PEG columns; FCF is the key read for L8 clouds (capex compressing FCF), through-cycle P/B for L3 memory
+- **(v13) Wants risks embedded in their layer** (red "Key risk" callout per layer), not a separate Risks section
+- **(v13) Multi-year "history & forecast" data shown as stacked columns**; market-share charts should carry absolute $ alongside %
 
 ---
 
@@ -345,6 +376,17 @@ The user mentioned wanting to continue in a Claude project long-term. Potential 
 - `render_block_three()` injects the `capex_slice` dashed callout into the Market-Size cell.
 - `render_layer_section()` renders Analyst's Take + stance after `what_it_does`, and charts after the three-up block.
 - Self-contained: still no JS, no external deps. Charts are SVG; citations are in-page anchors.
+
+**v12 builder additions:** `render_layer_head()` (two-column card header), `render_subsegments()` (card grid), `render_extra_table()` (reads `N.EXTRA_TABLES`), `EXTRA_CHARTS` dict merged after each layer's own charts, `MARGIN_FOCUS` dict. New seed column `company_layer.ai_rev_share`.
+
+**v13 builder additions (`scripts/4_build_report.py`):**
+- `svg_stacked_cols(years, series, unit)` — vertical stacked columns (multi-year history/forecast) with per-column totals; new chart `type:"stacked"` (`{years, series:[(name,[vals],note)]}`). `render_charts` dispatches donut/bar/stacked.
+- **Interactivity** is a module-level `CHART_JS` string injected in a `<script>` before `</body>`. SVG segments + legend rows carry `data-k` (series key) + `data-tip`; JS adds tooltip + `.hi`/`.dim` highlight + legend↔chart sync. (So the report now DOES ship a little JS — still one self-contained file, no framework.)
+- `render_layer_table` orders sub-layers by `MIN(sort_order)` per sub-layer (controls L8's US→Chinese→Neocloud grouping; also de-fragments L4/L0).
+- Comp columns: EV/EBITDA computed `enterprise_value_usd/ebitda_usd` **gated to 0.3–3× of market cap** (drops distorted ADRs); P/FCF `market_cap/fcf` ("neg" if FCF<0); FCF margin `fcf/rev`; P/B + PEG read straight from `market_data`. The seg cell now uses `esc_html_keep` (fixed the `<b>` literal). Chart titles use plain `&` (the builder escapes once).
+- `VALUATION_FOCUS` + `KEY_RISKS` dicts in narrative → blue "Valuation lens" + red "Key risk" callouts in each layer head. `render_risks()` is now dead (kept for reference); §5 removed, Deal Web=§5, Sources=§6.
+
+**v13 pipeline:** `3_refresh_market.py` now also fetches `freeCashflow`, `ebitda`, `enterpriseValue` (FCF/EBITDA × `fx_fin`, EV × `fx_trade`), `priceToBook`, `trailingPegRatio`. `market_data` schema gained `free_cash_flow_usd, ebitda_usd, enterprise_value_usd, price_to_book, peg_ratio` (added to `1_init_db.py`; on the existing DB they were added via `ALTER TABLE`). P/B + PEG were back-filled with a targeted `.info`-only pull (no full re-snapshot). EV/EBITDA is unreliable for ADRs because yfinance's `enterpriseValue` currency is inconsistent — hence the 0.3–3× sanity gate (TSM/ASX/BIDU/CBRS suppressed).
 
 **Hosting / git:** public repo `jefferror404/aisc-research`; `gh` CLI authenticated as `jefferror404`. Pages enabled via `gh api repos/.../pages` (source `main` / root). Update = rebuild HTML, commit `report/ai_supply_chain_report.html`, push.
 
