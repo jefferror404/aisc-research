@@ -335,7 +335,8 @@ def svg_donut(rows, unit):
         color = CHART_PALETTE[i % len(CHART_PALETTE)]
         segs += (f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{color}" '
                  f'stroke-width="{sw}" stroke-dasharray="{dash:.2f} {circ - dash:.2f}" '
-                 f'stroke-dashoffset="{-offset:.2f}" transform="rotate(-90 {cx} {cy})">'
+                 f'stroke-dashoffset="{-offset:.2f}" transform="rotate(-90 {cx} {cy})" '
+                 f'data-k="{i}" data-tip="{esc(label)}: {_fmt_val(val, unit)}">'
                  f'<title>{esc(label)}: {_fmt_val(val, unit)}</title></circle>')
         offset += dash
     return (f'<svg viewBox="0 0 160 160" class="donut" role="img" '
@@ -356,7 +357,9 @@ def svg_bars(rows, unit):
         color = CHART_PALETTE[i % len(CHART_PALETTE)]
         parts += (f'<text x="{lblw - 8}" y="{y + rowh/2 + 4}" text-anchor="end" '
                   f'class="barlbl">{esc(label)}</text>'
-                  f'<rect x="{lblw}" y="{y}" width="{bw:.1f}" height="{rowh}" rx="4" fill="{color}"/>'
+                  f'<rect x="{lblw}" y="{y}" width="{bw:.1f}" height="{rowh}" rx="4" fill="{color}" '
+                  f'data-k="{i}" data-tip="{esc(label)}: {_fmt_val(val, unit)}">'
+                  f'<title>{esc(label)}: {_fmt_val(val, unit)}</title></rect>'
                   f'<text x="{lblw + bw + 6}" y="{y + rowh/2 + 4}" class="barval">{_fmt_val(val, unit)}</text>')
     return (f'<svg viewBox="0 0 {w} {h}" class="bars" role="img" '
             f'aria-label="bar chart">{parts}</svg>')
@@ -381,7 +384,8 @@ def svg_stacked_cols(years, series, unit):
             y -= seg_h
             color = CHART_PALETTE[j % len(CHART_PALETTE)]
             parts += (f'<rect x="{x:.1f}" y="{y:.1f}" width="{colw}" height="{seg_h:.1f}" '
-                      f'fill="{color}"><title>{esc(s[0])} {esc(yr)}: {_fmt_val(v, unit)}</title></rect>')
+                      f'fill="{color}" data-k="{j}" data-tip="{esc(s[0])} {esc(yr)}: {_fmt_val(v, unit)}">'
+                      f'<title>{esc(s[0])} {esc(yr)}: {_fmt_val(v, unit)}</title></rect>')
         ytot = top + plot_h - (totals[i] / maxv) * plot_h
         parts += (f'<text x="{x + colw/2:.1f}" y="{ytot - 5:.1f}" text-anchor="middle" '
                   f'class="coltot">{_fmt_val(totals[i], unit)}</text>')
@@ -411,7 +415,8 @@ def render_charts(charts):
                 name, vals = s[0], s[1]
                 note = s[2] if len(s) > 2 else ""
                 color = CHART_PALETTE[i % len(CHART_PALETTE)]
-                leg += (f'<tr><td><span class="dot" style="background:{color}"></span>{esc(name)}</td>'
+                leg += (f'<tr data-k="{i}" data-tip="{esc(name)}: {_fmt_val(vals[-1], unit)}">'
+                        f'<td><span class="dot" style="background:{color}"></span>{esc(name)}</td>'
                         f'<td class="num">{_fmt_val(vals[-1], unit)}</td>'
                         f'<td class="cnote">{esc(note)}</td></tr>')
         else:
@@ -419,7 +424,8 @@ def render_charts(charts):
             chart_svg = svg_bars(rows, unit) if ctype == "bar" else svg_donut(rows, unit)
             for i, (label, val, note) in enumerate(rows):
                 color = CHART_PALETTE[i % len(CHART_PALETTE)]
-                leg += (f'<tr><td><span class="dot" style="background:{color}"></span>{esc(label)}</td>'
+                leg += (f'<tr data-k="{i}" data-tip="{esc(label)}: {_fmt_val(val, unit)}">'
+                        f'<td><span class="dot" style="background:{color}"></span>{esc(label)}</td>'
                         f'<td class="num">{_fmt_val(val, unit)}</td>'
                         f'<td class="cnote">{esc(note)}</td></tr>')
         out += (f'<figure class="chart"><figcaption>{esc(ch["title"])}{cite}</figcaption>'
@@ -728,7 +734,9 @@ def build():
     filings and earnings releases. Figures are estimates and may contain errors — verify against
     primary sources before acting.</p>
     <p class="note">Generated {esc(datetime.now().strftime('%Y-%m-%d %H:%M'))} from data/aisc.db + data/narrative.py.</p></footer>
-</main></body></html>'''
+</main>
+<script>{CHART_JS}</script>
+</body></html>'''
 
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(html_doc, encoding="utf-8")
@@ -864,6 +872,16 @@ sup.cite a:hover{text-decoration:underline}
 .stackcol{width:100%;max-width:460px;height:auto}
 .stackcol .coltot{font-size:10.5px;fill:var(--ink);font-weight:700}
 .stackcol .collbl{font-size:11px;fill:var(--muted)}
+/* interactive charts: tooltip + hover highlight + legend sync */
+figure.chart [data-k]{cursor:pointer}
+figure.chart svg [data-k]{transition:opacity .12s ease}
+figure.chart.dim svg [data-k]{opacity:.32}
+figure.chart.dim svg [data-k].hi{opacity:1;stroke:#1a1f2b;stroke-width:1.5}
+figure.chart .legend tr[data-k]{transition:background .12s}
+figure.chart .legend tr[data-k].hi{background:#eef2fb}
+.charttip{position:fixed;z-index:9999;background:#1a1f2b;color:#fff;font-size:12px;font-weight:600;
+  padding:5px 9px;border-radius:6px;pointer-events:none;box-shadow:0 3px 12px rgba(0,0,0,.28);
+  max-width:280px;display:none}
 .legend{border-collapse:collapse;flex:1 1 240px;font-size:12px}
 .legend td{padding:3px 6px;border-bottom:1px solid #f0f2f7;vertical-align:top}
 .legend td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
@@ -903,6 +921,31 @@ table.comp.facts{min-width:520px}table.comp.facts td.lbl{font-weight:600;color:#
 @media(max-width:900px){.layerhead{grid-template-columns:1fr}.sscards{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:820px){.three,.chipcards,.risks,.stacks,.charts,.sscards{grid-template-columns:1fr}.subseg ul{columns:1}
   .hero h1{font-size:29px}.chartbody{flex-direction:column;align-items:flex-start}}
+"""
+
+
+# Vanilla-JS chart interactivity (no framework). For each chart figure: hovering any
+# SVG segment/bar OR its legend row shows a styled tooltip, highlights the matching
+# data series, and dims the rest. Legend <-> chart sync is by the shared data-k key.
+CHART_JS = """
+(function(){
+  var tip=document.createElement('div');tip.className='charttip';document.body.appendChild(tip);
+  function show(t,x,y){tip.textContent=t;tip.style.display='block';tip.style.left=(x+14)+'px';tip.style.top=(y+14)+'px';}
+  function hide(){tip.style.display='none';}
+  document.querySelectorAll('figure.chart').forEach(function(fig){
+    var els=fig.querySelectorAll('[data-k]');
+    function setHi(k,on){
+      fig.classList.toggle('dim',on);
+      els.forEach(function(e){e.classList.toggle('hi',on&&e.getAttribute('data-k')===k);});
+    }
+    els.forEach(function(el){
+      var k=el.getAttribute('data-k'),t=el.getAttribute('data-tip')||'';
+      el.addEventListener('mouseenter',function(ev){setHi(k,true);if(t)show(t,ev.clientX,ev.clientY);});
+      el.addEventListener('mousemove',function(ev){if(t)show(t,ev.clientX,ev.clientY);});
+      el.addEventListener('mouseleave',function(){setHi(k,false);hide();});
+    });
+  });
+})();
 """
 
 

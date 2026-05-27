@@ -113,7 +113,7 @@ CAPEX = {
     ),
     # Per-company capex history & forecast (stacked). Approximate total capex in $B by calendar year.
     "charts": [
-        {"title": "Big-5 hyperscaler capex — history &amp; forecast ($B)", "source": "filings",
+        {"title": "Big-5 hyperscaler capex — history & forecast ($B)", "source": "filings",
          "type": "stacked", "unit": "$B", "years": ["2023", "2024", "2025", "2026E"],
          "series": [
              ("Amazon", [48, 83, 118, 200], "Total capex; AWS is the fast-growing part."),
@@ -122,6 +122,16 @@ CAPEX = {
              ("Meta", [28, 37, 72, 140], "Captive AI clusters (no external cloud)."),
              ("Oracle", [8, 13, 21, 50], "OCI / Stargate buildout."),
          ]},
+        {"title": "Amazon capex ($B)", "source": "filings", "type": "bar", "unit": "$B",
+         "rows": [("2023", 48, ""), ("2024", 83, "+73%"), ("2025", 118, "+42%"), ("2026E", 200, "+69%")]},
+        {"title": "Microsoft capex ($B)", "source": "filings", "type": "bar", "unit": "$B",
+         "rows": [("2023", 28, ""), ("2024", 55, "+96%"), ("2025", 95, "+73%"), ("2026E", 190, "+100%")]},
+        {"title": "Alphabet capex ($B)", "source": "filings", "type": "bar", "unit": "$B",
+         "rows": [("2023", 32, ""), ("2024", 52, "+63%"), ("2025", 85, "+63%"), ("2026E", 188, "+121%")]},
+        {"title": "Meta capex ($B)", "source": "filings", "type": "bar", "unit": "$B",
+         "rows": [("2023", 28, ""), ("2024", 37, "+32%"), ("2025", 72, "+95%"), ("2026E", 140, "+94%")]},
+        {"title": "Oracle capex ($B)", "source": "filings", "type": "bar", "unit": "$B",
+         "rows": [("2023", 8, ""), ("2024", 13, "+63%"), ("2025", 21, "+62%"), ("2026E", 50, "+138%")]},
     ],
     # Distilled key takeaway, rendered AFTER table 2.1 (the user's direct question, answered concisely).
     "takeaway": {
@@ -456,7 +466,7 @@ LAYER_CONTENT = {
     "stance": "Core long: the hyperscalers (MSFT, AMZN, GOOGL, ORCL) for quality + backlog. Neoclouds/ex-miners only for high-beta exposure, sized for binary contract risk.",
     "capex_slice": "L8 <i>is</i> the $725B — this layer does the spending, it does not receive a slice. The capex is L8 converting its balance sheet into the L0–L7 stack below.",
     "charts": [
-      {"title": "Cloud infrastructure market share — 2026E", "source": "synergy", "type": "donut", "unit": "%",
+      {"title": "Cloud infrastructure services — revenue market share, 2026E", "source": "synergy", "type": "donut", "unit": "%",
        "rows": [("AWS (Amazon)", 30.0, "$128.7B FY25, +19%"),
                 ("Microsoft Azure", 23.0, "+40% growth; $ not disclosed"),
                 ("Google Cloud", 13.5, "~$59B FY25, +~50%"),
@@ -897,7 +907,7 @@ EXTRA_CHARTS = {
         {"title": "Data-center CPU share — 2025", "source": "filings", "type": "donut", "unit": "%",
          "rows": [("Intel (Xeon)", 55, "losing share"), ("AMD (EPYC)", 39, "gaining fast"),
                   ("Arm (Graviton etc.)", 6, "hyperscaler in-house")]},
-        {"title": "Compute-silicon market size — GPU vs ASIC vs CPU ($B, history &amp; forecast)",
+        {"title": "Compute-silicon market size — GPU vs ASIC vs CPU ($B, history & forecast)",
          "source": "filings", "type": "stacked", "unit": "$B", "years": ["2023", "2024", "2025", "2026E"],
          "series": [("Merchant GPU", [45, 100, 180, 260], "NVIDIA ~90% + AMD"),
                     ("Custom ASIC (XPU)", [8, 18, 30, 45], "Broadcom / Marvell-built"),
@@ -914,7 +924,7 @@ EXTRA_CHARTS = {
                   ("Sandisk", 14, "pure-play"), ("Micron", 11, ""), ("Others", 3, "")]},
         {"title": "HDD market share — 2025 (~$20B)", "source": "trendforce", "type": "donut", "unit": "%",
          "rows": [("Seagate", 43, ""), ("Western Digital", 37, ""), ("Toshiba", 20, "")]},
-        {"title": "Memory &amp; storage market size by segment ($B, history &amp; forecast)", "source": "trendforce",
+        {"title": "Memory & storage market size by segment ($B, history & forecast)", "source": "trendforce",
          "type": "stacked", "unit": "$B", "years": ["2023", "2024", "2025", "2026E"],
          "series": [("DRAM (ex-HBM)", [48, 80, 130, 150], "commodity DRAM"),
                     ("HBM", [5, 16, 35, 58], "→ ~$100B by 2028"),
