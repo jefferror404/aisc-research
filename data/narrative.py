@@ -181,16 +181,18 @@ CONNECT = {
     # 3.3 value capture. (layer label, wallet share, ticker for LIVE margin, margin type 'om'|'gm',
     #                      pricing power 1-10, takeaway)
     "value_capture": [
+        ("L10 — Apps", "demand-side*", "MSFT", "om", "5–6 — model-gated", "Where cash enters, but the model below keeps most of it. Winners need distribution (MSFT) or proprietary data. *end-user revenue, not a capex slice."),
+        ("L9 — Foundation models", "demand-side*", "GOOGL", "om", "7 — real but transient", "~$100B ARR; top-3 take ~70%. Inference ~50–60% gross, but pure labs run GAAP-negative while training the next model. Margin shown = Alphabet, the owns-the-stack proxy. *largest L8 customer, not a capex slice."),
+        ("L8 — Cloud (hyperscale)", "captures L9→L8", "MSFT", "om", "8 — three-player oligopoly", "Captures the labs' compute spend at 35–50% margins; $1.8T+ combined backlog."),
+        ("L7 — DC REITs", "~3–4%*", "EQIX", "om", "7 — interconnection moats", "High recurring revenue, capital-intensive. *real-estate component."),
+        ("L6 — Networking + Optics", "~6–8%", "ANET", "om", "7–8 — capacity-constrained", "Optics (LITE/COHR) supply-bottlenecked through 2027; switching leaders 40%+ margins."),
+        ("L5 — Servers / ODMs", "~8–10%", "2317.TW", "gm", "2 — near-commodity", "Foxconn ~6% gross margin on AI servers; volume game, margins compress with scale."),
         ("L4 — Accelerators", "~40–45%", "NVDA", "om", "10 — monopoly", "Largest single profit pool: ~$120B net income on $216B revenue (FY26)."),
-        ("L2 — Foundry", "~5–7%*", "TSM", "om", "9 — near-monopoly", "Highest-quality monopoly; sole leading-edge + CoWoS. *chip-cost component."),
         ("L3 — HBM/Memory", "~10–12%", "000660.KS", "om", "9 — sold-out oligopoly", "SK Hynix at cycle peak; HBM TAM $35B→$100B (2028). Priced for mean-reversion (fwd P/E ~5×)."),
+        ("L2 — Foundry", "~5–7%*", "TSM", "om", "9 — near-monopoly", "Highest-quality monopoly; sole leading-edge + CoWoS. *chip-cost component."),
         ("L1 — EUV", "~3–4%*", "ASML", "om", "10 — pure monopoly", "Sole EUV supplier; High-NA $380M/unit, no substitute. *litho component."),
         ("L1 — EDA", "~1%", "SNPS", "om", "9 — duopoly", "Software economics: ~95% incremental gross margins on every chip designed."),
-        ("L8 — Cloud (hyperscale)", "captures L9→L8", "MSFT", "om", "8 — three-player oligopoly", "Captures the labs' compute spend at 35–50% margins; $1.8T+ combined backlog."),
-        ("L6 — Networking + Optics", "~6–8%", "ANET", "om", "7–8 — capacity-constrained", "Optics (LITE/COHR) supply-bottlenecked through 2027; switching leaders 40%+ margins."),
-        ("L7 — DC REITs", "~3–4%*", "EQIX", "om", "7 — interconnection moats", "High recurring revenue, capital-intensive. *real-estate component."),
         ("L0 — Power & Equip", "~8–12%", "VRT", "om", "6–7 — supply-constrained", "Multiple suppliers, but transformer/turbine lead times = pricing power."),
-        ("L5 — Servers / ODMs", "~8–10%", "2317.TW", "gm", "2 — near-commodity", "Foxconn ~6% gross margin on AI servers; volume game, margins compress with scale."),
     ],
 }
 

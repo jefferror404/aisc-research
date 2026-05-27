@@ -193,7 +193,7 @@ def render_company_row(con, cl, margin_focus=None):
         cells = [
             f'<td class="tk">{esc(ticker)}</td>',
             f'<td class="co">{esc(cl["segment_label"] or ticker)}{pure_badge}</td>',
-            f'<td class="seg">{esc(seg)}</td>',
+            f'<td class="seg">{esc_html_keep(seg)}</td>',
             ai_cell,
             f'<td colspan="{_PRIV_COLSPAN}" class="priv">Private — see notes</td>',
         ]
@@ -202,7 +202,7 @@ def render_company_row(con, cl, margin_focus=None):
     cells = [
         f'<td class="tk">{esc(ticker)}</td>',
         f'<td class="co">{esc(co["name"] if co else ticker)}{pure_badge}</td>',
-        f'<td class="seg">{esc(seg)}</td>',
+        f'<td class="seg">{esc_html_keep(seg)}</td>',
         ai_cell,
         f'<td class="num">{fy_cell}</td>',
         f'<td class="num">{est_cell}</td>',
