@@ -30,7 +30,10 @@ META = {
         "backlog/RPO and AI-specific revenue are hand-curated from company earnings releases and filings. "
         "P/S is computed as market cap ÷ TTM revenue (both USD) to avoid the currency mismatch that breaks "
         "Yahoo's reported P/S for ADRs and foreign listings. International market caps are converted to USD "
-        "at the refresh-date FX rate."
+        "at the refresh-date FX rate. EV/EBITDA, P/FCF and FCF margin are computed from USD-converted "
+        "free cash flow, EBITDA and enterprise value; EV/EBITDA is suppressed (“—”) for the handful of ADRs "
+        "where Yahoo’s enterprise-value currency is unreliable (it sits outside 0.3–3× of market cap). "
+        "P/FCF shows “neg” where free cash flow is negative (e.g. neoclouds mid-buildout)."
     ),
 }
 

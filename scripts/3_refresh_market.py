@@ -117,13 +117,21 @@ def main():
         mc_usd = mc_native * fx_trade if (mc_native and fx_trade) else None
         rev_ttm_native = info.get("totalRevenue")
         rev_ttm_usd = rev_ttm_native * fx_fin if (rev_ttm_native and fx_fin) else None
+        # FCF & EBITDA are reported in the financial currency; EV in the trading currency.
+        fcf_native = info.get("freeCashflow")
+        fcf_usd = fcf_native * fx_fin if (fcf_native is not None and fx_fin) else None
+        ebitda_native = info.get("ebitda")
+        ebitda_usd = ebitda_native * fx_fin if (ebitda_native is not None and fx_fin) else None
+        ev_native = info.get("enterpriseValue")
+        ev_usd = ev_native * fx_trade if (ev_native is not None and fx_trade) else None
 
         cur.execute(
             """INSERT OR REPLACE INTO market_data
                (ticker, as_of, currency, price, market_cap_usd, market_cap_native,
                 pe_ttm, forward_pe, ps_ttm, earnings_growth, revenue_growth,
-                gross_margin, operating_margin, ebitda_margin, profit_margin, total_revenue_ttm_usd)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                gross_margin, operating_margin, ebitda_margin, profit_margin, total_revenue_ttm_usd,
+                free_cash_flow_usd, ebitda_usd, enterprise_value_usd)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (tk, TODAY, trade_cur,
              info.get("currentPrice") or info.get("regularMarketPrice"),
              mc_usd, mc_native,
@@ -131,7 +139,8 @@ def main():
              info.get("priceToSalesTrailing12Months"),
              info.get("earningsGrowth"), info.get("revenueGrowth"),
              info.get("grossMargins"), info.get("operatingMargins"),
-             info.get("ebitdaMargins"), info.get("profitMargins"), rev_ttm_usd),
+             info.get("ebitdaMargins"), info.get("profitMargins"), rev_ttm_usd,
+             fcf_usd, ebitda_usd, ev_usd),
         )
 
         # ---- per-fiscal-year financials ----

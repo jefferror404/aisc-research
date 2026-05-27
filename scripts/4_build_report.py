@@ -136,6 +136,7 @@ LAYER_TABLE_COLS = [
     ("Revenue FY25", "fyrev"), ("Revenue 2026E", "est"), ("Δ % YoY", "chg"),
     ("Gross Margin", "gm"), ("Operating Margin", "om"), ("EBITDA Margin", "ebitda"),
     ("Market Cap", "mcap"), ("P/E (TTM)", "pe"), ("Fwd P/E", "fpe"), ("P/S", "ps"),
+    ("EV/EBITDA", "evebitda"), ("P/FCF", "pfcf"), ("FCF Margin", "fcfm"),
     ("EPS Growth", "eg"), ("Backlog / RPO", "backlog"),
 ]
 # number of columns that follow the (ticker, company, segment, AI%) lead block —
@@ -167,6 +168,24 @@ def render_company_row(con, cl, margin_focus=None):
     ps = None
     if m and m["total_revenue_ttm_usd"] and m["market_cap_usd"]:
         ps = m["market_cap_usd"] / m["total_revenue_ttm_usd"]
+
+    # EV/EBITDA, P/FCF, FCF margin (all from USD-converted fields).
+    ev_ebitda = p_fcf = fcf_margin = None
+    fcf_neg = False
+    if m:
+        ev, ebd, mc = m["enterprise_value_usd"], m["ebitda_usd"], m["market_cap_usd"]
+        # Gate EV/EBITDA when yfinance's EV is currency-distorted (some ADRs): a sane
+        # EV sits within ~0.3–3x of market cap. Outside that band we suppress to "—".
+        if ev and ebd and ebd > 0 and mc and 0.3 <= ev / mc <= 3.0:
+            ev_ebitda = ev / ebd
+        fcf = m["free_cash_flow_usd"]
+        if fcf is not None and mc:
+            if fcf > 0:
+                p_fcf = mc / fcf
+            else:
+                fcf_neg = True
+        if fcf is not None and m["total_revenue_ttm_usd"]:
+            fcf_margin = fcf / m["total_revenue_ttm_usd"]
 
     seg = cl["segment_rev_note"] or (cl["segment_label"] or "")
     pure_badge = ' <span class="badge pure">pure-play</span>' if pure else ""
@@ -214,6 +233,9 @@ def render_company_row(con, cl, margin_focus=None):
         f'<td class="num">{mult(m["pe_ttm"]) if m else "—"}</td>',
         f'<td class="num">{mult(m["forward_pe"]) if m else "—"}</td>',
         f'<td class="num">{mult(ps)}</td>',
+        f'<td class="num">{mult(ev_ebitda)}</td>',
+        f'<td class="num {"neg" if fcf_neg else ""}">{mult(p_fcf) if p_fcf is not None else ("neg" if fcf_neg else "—")}</td>',
+        f'<td class="num {cls_margin(fcf_margin)}">{pct(fcf_margin)}</td>',
         f'<td class="num {cls_growth(m["earnings_growth"] if m else None)}">{pct(m["earnings_growth"]) if m else "—"}</td>',
         f'<td class="bk">{esc(cl["backlog_rpo"] or "—")}</td>',
     ]
