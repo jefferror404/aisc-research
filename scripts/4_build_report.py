@@ -13,6 +13,8 @@ Output: report/ai_supply_chain_report.html  (self-contained, no external deps).
 Re-run after refreshing data (3_refresh_market.py) or editing narrative.py / seeds.
 """
 import html
+import math
+import re
 import sqlite3
 import sys
 from datetime import datetime
@@ -128,9 +130,10 @@ def next_est_usd_b(con, ticker, country, latest_fy_usd):
 # ----------------------------- HTML rendering -----------------------------
 LAYER_TABLE_COLS = [
     ("Ticker", "ticker"), ("Company", "name"), ("Segment / share of revenue", "segment"),
-    ("FY rev", "fyrev"), ("FY+1E rev", "est"), ("GM", "gm"), ("Op", "om"), ("EBITDA", "ebitda"),
-    ("Mkt cap", "mcap"), ("P/E", "pe"), ("Fwd P/E", "fpe"), ("P/S", "ps"),
-    ("Earn. gr.", "eg"), ("Backlog / RPO", "backlog"),
+    ("Revenue FY25", "fyrev"), ("Revenue 2026E", "est"), ("Gross Margin", "gm"),
+    ("Operating Margin", "om"), ("EBITDA Margin", "ebitda"),
+    ("Market Cap", "mcap"), ("P/E (TTM)", "pe"), ("Fwd P/E", "fpe"), ("P/S", "ps"),
+    ("EPS Growth", "eg"), ("Backlog / RPO", "backlog"),
 ]
 
 
@@ -223,10 +226,13 @@ def render_block_three(content):
     bn_items = "".join(f"<li>{p}</li>" for p in bn["points"])
     ms_items = "".join(f"<li>{esc_html_keep(p)}</li>" for p in content["market_size"])
     va_items = "".join(f"<li>{esc_html_keep(p)}</li>" for p in content["value_added"])
+    capex_slice = content.get("capex_slice")
+    capex_block = (f'<div class="capexslice"><span class="cstag">Share of the $725B capex</span>'
+                   f'{esc_html_keep(capex_slice)}</div>') if capex_slice else ""
     return f'''
     <div class="three">
       <div class="cell bn"><h4>Bottleneck <span class="sevtag {sev_cls}">{esc(sev)}</span></h4><ul>{bn_items}</ul></div>
-      <div class="cell ms"><h4>Market Size</h4><ul>{ms_items}</ul></div>
+      <div class="cell ms"><h4>Market Size</h4>{capex_block}<ul>{ms_items}</ul></div>
       <div class="cell va"><h4>Value Added &amp; Margins</h4><ul>{va_items}</ul></div>
     </div>'''
 
@@ -234,6 +240,125 @@ def render_block_three(content):
 def esc_html_keep(s):
     """Our narrative strings contain intentional <b>/<i> tags — keep them, they're trusted."""
     return s
+
+
+# ----------------------------- citations -----------------------------
+CITE_RE = re.compile(r"\[\[cite:([a-z0-9_]+)\]\]")
+
+
+def process_citations(body_html):
+    """Replace [[cite:ID]] tokens with numbered superscript links (numbered in order
+    of first appearance) and return (new_html, ordered_source_ids)."""
+    order = []
+
+    def repl(m):
+        sid = m.group(1)
+        if sid not in N.SOURCES:
+            return ""  # unknown id -> drop the marker silently
+        if sid not in order:
+            order.append(sid)
+        n = order.index(sid) + 1
+        return f'<sup class="cite"><a href="#ref-{sid}" title="{esc(N.SOURCES[sid][0])}">[{n}]</a></sup>'
+
+    return CITE_RE.sub(repl, body_html), order
+
+
+def render_references(order):
+    if not order:
+        return ""
+    lis = ""
+    for i, sid in enumerate(order, 1):
+        label, detail, url = N.SOURCES[sid]
+        head = (f'<a href="{esc(url)}" target="_blank" rel="noopener">{esc(label)}</a>'
+                if url else f"<b>{esc(label)}</b>")
+        lis += (f'<li id="ref-{sid}"><span class="rnum">[{i}]</span> '
+                f'<span class="rbody">{head} — {esc(detail)}</span></li>')
+    return (f'<section id="references"><h2>8 · Sources &amp; References</h2>'
+            f'<p class="note">Click any footnote number in the text to jump here. '
+            f'External links open the primary source where a public URL exists.</p>'
+            f'<ol class="refs">{lis}</ol></section>')
+
+
+# ----------------------------- charts (inline SVG) -----------------------------
+CHART_PALETTE = ["#2547d0", "#0a8f5b", "#b9770a", "#c0392b", "#7c4dff", "#0aa2c0",
+                 "#d4499b", "#5b6577", "#8a9a5b", "#a0522d"]
+
+
+def _fmt_val(v, unit):
+    if unit == "%":
+        return f"{v:g}%"
+    if unit and unit.startswith("$"):
+        return f"${v:g}B"
+    return f"{v:g}"
+
+
+def svg_donut(rows, unit):
+    """rows: list of (label, value, note). Returns an SVG donut string."""
+    total = sum(r[1] for r in rows) or 1
+    r, cx, cy, sw = 60, 80, 80, 26
+    circ = 2 * math.pi * r
+    segs, offset = "", 0.0
+    for i, (label, val, _note) in enumerate(rows):
+        frac = val / total
+        dash = frac * circ
+        color = CHART_PALETTE[i % len(CHART_PALETTE)]
+        segs += (f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{color}" '
+                 f'stroke-width="{sw}" stroke-dasharray="{dash:.2f} {circ - dash:.2f}" '
+                 f'stroke-dashoffset="{-offset:.2f}" transform="rotate(-90 {cx} {cy})">'
+                 f'<title>{esc(label)}: {_fmt_val(val, unit)}</title></circle>')
+        offset += dash
+    return (f'<svg viewBox="0 0 160 160" class="donut" role="img" '
+            f'aria-label="share donut chart">{segs}'
+            f'<circle cx="{cx}" cy="{cy}" r="{r - sw/2 - 1}" fill="#fff"/></svg>')
+
+
+def svg_bars(rows, unit):
+    """rows: list of (label, value, note). Horizontal SVG bar chart."""
+    maxv = max((r[1] for r in rows), default=1) or 1
+    rowh, gap, lblw, barw = 26, 8, 150, 230
+    h = len(rows) * (rowh + gap)
+    w = lblw + barw + 60
+    parts = ""
+    for i, (label, val, _note) in enumerate(rows):
+        y = i * (rowh + gap)
+        bw = (val / maxv) * barw
+        color = CHART_PALETTE[i % len(CHART_PALETTE)]
+        parts += (f'<text x="{lblw - 8}" y="{y + rowh/2 + 4}" text-anchor="end" '
+                  f'class="barlbl">{esc(label)}</text>'
+                  f'<rect x="{lblw}" y="{y}" width="{bw:.1f}" height="{rowh}" rx="4" fill="{color}"/>'
+                  f'<text x="{lblw + bw + 6}" y="{y + rowh/2 + 4}" class="barval">{_fmt_val(val, unit)}</text>')
+    return (f'<svg viewBox="0 0 {w} {h}" class="bars" role="img" '
+            f'aria-label="bar chart">{parts}</svg>')
+
+
+def render_charts(charts):
+    """Render a layer's chart list: SVG (donut/bar) + a legend/detail table beside it."""
+    if not charts:
+        return ""
+    out = '<div class="charts">'
+    for ch in charts:
+        unit = ch.get("unit", "")
+        rows = ch["rows"]
+        cite = ""
+        sid = ch.get("source")
+        if sid and sid in N.SOURCES:
+            cite = f' [[cite:{sid}]]'  # processed later in the global citation pass
+        if ch.get("type") == "bar":
+            chart_svg = svg_bars(rows, unit)
+        else:
+            chart_svg = svg_donut(rows, unit)
+        # legend / detail rows
+        leg = ""
+        for i, (label, val, note) in enumerate(rows):
+            color = CHART_PALETTE[i % len(CHART_PALETTE)]
+            leg += (f'<tr><td><span class="dot" style="background:{color}"></span>{esc(label)}</td>'
+                    f'<td class="num">{_fmt_val(val, unit)}</td>'
+                    f'<td class="cnote">{esc(note)}</td></tr>')
+        out += (f'<figure class="chart"><figcaption>{esc(ch["title"])}{cite}</figcaption>'
+                f'<div class="chartbody"><div class="chartviz">{chart_svg}</div>'
+                f'<table class="legend"><tbody>{leg}</tbody></table></div></figure>')
+    out += "</div>"
+    return out
 
 
 def render_glossary(items):
@@ -278,7 +403,7 @@ def render_gpu_cpu_asic():
 # ----------------------------- sections -----------------------------
 def render_capex(con):
     c = N.CAPEX
-    q = c["is_it_the_top_flow"]
+    q = c["takeaway"]
     body = "".join(f"<p>{esc_html_keep(p)}</p>" for p in q["body"])
     alloc_rows = "".join(
         f'<tr><td>{esc(cat)}</td><td class="num">{esc(pc)}</td><td class="num">{esc(dol)}</td>'
@@ -289,10 +414,12 @@ def render_capex(con):
              f'<tbody>{alloc_rows}</tbody></table></div>')
     return f'''<section id="capex"><h2>2 · Hyperscaler Capex — the $725B keystone flow</h2>
       <p>{esc_html_keep(c["intro"])}</p>
-      <div class="callout"><h4>{esc(q["heading"])}</h4>{body}</div>
       <h3>2.1 Where the $725B goes</h3>
+      <p>{esc_html_keep(c["allocation_intro"])}</p>
       {alloc}
-      <p class="note">{esc_html_keep(c["allocation_note"])}</p></section>'''
+      <p class="src">{esc_html_keep(c["allocation_source"])}</p>
+      <p class="note">{esc_html_keep(c["allocation_note"])}</p>
+      <div class="callout"><h4>{esc(q["heading"])}</h4>{body}</div></section>'''
 
 
 def margin_for(con, ticker, mtype):
@@ -332,11 +459,12 @@ def render_connect(con):
           f'<th>What it tells us</th></tr></thead><tbody>{vc_rows}</tbody></table></div>')
     return f'''<section id="connect"><h2>3 · How the Layers Connect &amp; Who Captures Value</h2>
       <p>{esc_html_keep(c["intro"])}</p>
-      <h3>3.1 The money flow — a capex dollar's journey down the stack</h3>
+      <h3>3.1 The money flow — a capex dollar’s journey down the stack</h3>
       {flow}
-      <h3>3.3 Value capture — who keeps the most of each capex dollar</h3>
+      <h3>3.2 Value capture — who keeps the most of each capex dollar</h3>
       <p>{esc_html_keep(c["value_capture_intro"])}</p>
       {vc}
+      <h3>3.3 What I take away from this</h3>
       <ul class="obs">{obs}</ul></section>'''
 
 
@@ -353,6 +481,14 @@ def render_deal_web():
         return f'<div class="stack"><h4>{esc(title)}</h4><ul>{lis}</ul></div>'
     return f'''<section id="dealweb"><h2>7 · The AI Deal Web</h2>
       <p>{esc_html_keep(d["intro"])}</p>
+      <div style="margin:1.5rem 0 2rem;">
+        <a href="ai_deal_network_layered.html" target="_blank"
+           style="display:inline-flex;align-items:center;gap:0.6rem;background:#2563eb;color:#fff;font-weight:700;font-size:0.95rem;padding:0.75rem 1.4rem;border-radius:8px;text-decoration:none;box-shadow:0 2px 8px rgba(37,99,235,0.35);transition:background 0.15s;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Launch Interactive Deal Network Map
+        </a>
+        <span style="margin-left:1rem;font-size:0.82rem;color:#6b7280;">Opens in a new tab — explore deal flows across all 11 layers</span>
+      </div>
       <div class="stacks">{stack("OpenAI's deal stack", d["openai_stack"])}{stack("Anthropic's deal stack", d["anthropic_stack"])}</div>
       <div class="callout"><h4>NVIDIA — the "AI banker"</h4><p>{esc_html_keep(d["nvidia_portfolio_note"])}</p></div>
       <div class="callout warn"><h4>Circular financing</h4><p>{esc_html_keep(d["circular_note"])}</p></div></section>'''
@@ -367,8 +503,15 @@ def render_layer_section(con, layer_row):
     title = f"Layer {num} — {esc(name)}"
     parts = [f'<section id="{layer}" class="layer"><h2>{title}</h2>']
     parts.append(f'<p class="lead">{esc_html_keep(lc["what_it_does"])}</p>')
+    # Analyst's Take — first-person thesis, leads the layer
+    if lc.get("analyst_take"):
+        stance = (f'<div class="stance"><span class="stag">My stance</span>'
+                  f'{esc_html_keep(lc["stance"])}</div>') if lc.get("stance") else ""
+        parts.append(f'<div class="take"><h4>Analyst’s Take</h4>'
+                     f'<p>{esc_html_keep(lc["analyst_take"])}</p>{stance}</div>')
     parts.append(f'<p class="who"><b>Who pays whom:</b> {esc_html_keep(lc["who_pays_whom"])}</p>')
     parts.append(render_block_three(lc))
+    parts.append(render_charts(lc.get("charts")))
     parts.append(render_subsegments(lc.get("sub_segments")))
     if layer == "L4":
         parts.append(render_gpu_cpu_asic())
@@ -405,6 +548,34 @@ def build():
 
     layer_sections = "".join(render_layer_section(con, L) for L in N_LAYERS)
 
+    # Assemble the citable body first, then run one global citation pass so footnote
+    # numbers run in document order, then append the References section.
+    body = f'''
+  <section id="summary">
+    <div class="whatsnew"><h3>What’s new in v11</h3><ul>{whatsnew}</ul></div>
+    <h2>1 · Executive Summary</h2>
+    <p>This is my map of the AI supply chain, eleven layers deep — from the apps people pay for (L10)
+    down to the electricity that powers it all (L0). Each layer opens with what it does, then <b>my
+    Analyst’s Take and investment stance</b>, an expanded Bottleneck / Market-Size / Value-Added
+    analysis (now showing each layer’s slice of the $725B capex funnel), a live comp table for every
+    public name, and the key deals. Every headline figure carries a clickable source footnote.</p>
+    <table class="overview"><thead><tr><th>Layer</th><th>Function</th><th class="num">Names</th></tr></thead>
+      <tbody>{ov_rows}</tbody></table>
+    <p class="note">{esc_html_keep(N.META["data_note"])}</p>
+  </section>
+  {render_capex(con)}
+  {render_connect(con)}
+  <section id="layers-intro"><h2>4 · The Supply Chain — Layer by Layer</h2>
+    <p class="note">Each table is horizontally scrollable. Margins use the latest fiscal year (TTM
+    where FY is stale). P/S = market cap ÷ TTM revenue. Market cap converted to USD. “—” = not
+    available / not meaningful.</p></section>
+  {layer_sections}
+  {render_risks()}
+  {render_deal_web()}'''
+
+    body, cite_order = process_citations(body)
+    references = render_references(cite_order)
+
     html_doc = f'''<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(N.META["title"])} — {esc(N.META["subtitle"])}</title>
@@ -420,33 +591,16 @@ def build():
 <nav class="topnav"><div class="wrap">
   <a href="#summary">Summary</a><a href="#capex">Capex</a><a href="#connect">Value</a>
   <span class="sep">Layers</span>{nav}
-  <a href="#risks">Risks</a><a href="#dealweb">Deals</a>
+  <a href="#risks">Risks</a><a href="#dealweb">Deals</a><a href="#references">Sources</a>
 </div></nav>
 <main class="wrap">
-  <section id="summary">
-    <div class="whatsnew"><h3>What's new in v10</h3><ul>{whatsnew}</ul></div>
-    <h2>1 · Executive Summary</h2>
-    <p>The AI supply chain, eleven layers deep — from the apps people pay for (L10) down to the
-    electricity that powers it all (L0). Each layer below opens with what it does, who pays whom,
-    an expanded Bottleneck / Market-Size / Value-Added analysis, a live comp table for every public
-    name, and elaboration on the key deals.</p>
-    <table class="overview"><thead><tr><th>Layer</th><th>Function</th><th class="num">Names</th></tr></thead>
-      <tbody>{ov_rows}</tbody></table>
-    <p class="note">{esc_html_keep(N.META["data_note"])}</p>
-  </section>
-  {render_capex(con)}
-  {render_connect(con)}
-  <section id="layers-intro"><h2>4 · The Supply Chain — Layer by Layer</h2>
-    <p class="note">Each table is horizontally scrollable. Margins use the latest fiscal year (TTM
-    where FY is stale). P/S = market cap ÷ TTM revenue. Mkt cap converted to USD. "—" = not
-    available / not meaningful.</p></section>
-  {layer_sections}
-  {render_risks()}
-  {render_deal_web()}
+  {body}
+  {references}
   <footer><p><b>Disclaimer.</b> Information synthesis for educational and research purposes; not
-    investment advice. Valuation/margin data via Yahoo Finance (snapshot {esc(snap)}); segment,
-    contract and backlog data from company filings and earnings releases. Figures are estimates
-    and may contain errors — verify against primary sources before acting.</p>
+    investment advice, and the Analyst’s Take sections are the author’s opinion. Valuation/margin
+    data via Yahoo Finance (snapshot {esc(snap)}); segment, contract and backlog data from company
+    filings and earnings releases. Figures are estimates and may contain errors — verify against
+    primary sources before acting.</p>
     <p class="note">Generated {esc(datetime.now().strftime('%Y-%m-%d %H:%M'))} from data/aisc.db + data/narrative.py.</p></footer>
 </main></body></html>'''
 
@@ -548,8 +702,46 @@ table.overview .num,table.overview th.num{text-align:right}
 .stack{border:1px solid var(--line);border-radius:10px;padding:12px 15px;background:var(--card)}
 .stack ul{margin:6px 0;padding-left:17px}.stack li{font-size:13px;margin:5px 0}
 footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
-@media(max-width:820px){.three,.chipcards,.risks,.stacks{grid-template-columns:1fr}.subseg ul{columns:1}
-  .hero h1{font-size:29px}}
+/* Analyst's Take + stance */
+.take{background:linear-gradient(135deg,#f4f7ff,#eef3ff);border:1px solid #d3defa;border-left:4px solid var(--accent);
+  border-radius:0 12px 12px 0;padding:14px 18px;margin:14px 0}
+.take h4{color:var(--accent);margin-bottom:6px}
+.take p{font-size:14.5px;margin:0}
+.stance{margin-top:10px;font-size:13.5px;font-weight:600;color:#1c2c5e;background:#fff;border:1px solid #d3defa;
+  border-radius:8px;padding:8px 12px}
+.stance .stag{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;
+  color:#fff;background:var(--accent);padding:2px 8px;border-radius:20px;margin-right:8px;vertical-align:middle}
+/* capex slice inside Market Size cell */
+.capexslice{background:#fff;border:1px dashed #b9c8ec;border-radius:8px;padding:8px 10px;margin:0 0 9px;font-size:12.5px;color:#243a73}
+.capexslice .cstag{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:#5670c4;margin-bottom:3px}
+/* citations */
+sup.cite{font-size:10px;line-height:0;margin-left:1px}
+sup.cite a{color:var(--accent);font-weight:700;text-decoration:none}
+sup.cite a:hover{text-decoration:underline}
+.src{color:var(--muted);font-size:12px;font-style:italic;margin:6px 0}
+/* references */
+.refs{list-style:none;margin:14px 0;padding:0;counter-reset:none}
+.refs li{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13px}
+.refs li:target{background:#fff7e6;border-radius:6px;padding:8px}
+.refs .rnum{font-weight:700;color:var(--accent);min-width:34px}
+.refs .rbody{color:#3a4254}
+/* charts */
+.charts{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0}
+.chart{margin:0;border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--card)}
+.chart figcaption{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px}
+.chartbody{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.chartviz{flex:0 0 auto}
+.donut{width:150px;height:150px}
+.bars{width:100%;max-width:440px;height:auto}
+.bars .barlbl{font-size:11px;fill:#3a4254}
+.bars .barval{font-size:11px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.legend{border-collapse:collapse;flex:1 1 240px;font-size:12px}
+.legend td{padding:3px 6px;border-bottom:1px solid #f0f2f7;vertical-align:top}
+.legend td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.legend td.cnote{color:var(--muted);font-size:11px}
+.legend .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:middle}
+@media(max-width:820px){.three,.chipcards,.risks,.stacks,.charts{grid-template-columns:1fr}.subseg ul{columns:1}
+  .hero h1{font-size:29px}.chartbody{flex-direction:column;align-items:flex-start}}
 """
 
 

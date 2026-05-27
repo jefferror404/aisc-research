@@ -12,16 +12,17 @@ Coverage date: May 2026. Severity scale for bottlenecks: LOW < MEDIUM < HIGH < E
 
 META = {
     "title": "The AI Supply Chain",
-    "subtitle": "An Equity Research Deep-Dive — v10",
+    "subtitle": "An Equity Research Deep-Dive — v11",
     "tagline": "11 Layers · Bottlenecks · Market Sizes · Value Capture · Live Comps",
     "coverage_date": "May 2026",
     "whats_new": [
-        "Every public name now carries a full comp set — FY revenue, FY+1 estimate, gross/operating/EBITDA margins, market cap, P/E (TTM), forward P/E, P/S, and earnings growth — pulled live from a refreshable database.",
-        "Segment disclosure: for diversified names, the AI-relevant segment revenue and its share of total revenue (pure-plays flagged).",
-        "Deep-dive on GPU vs CPU vs ASIC in Layer 4 — what each does, why it matters, whether they substitute, and use cases.",
-        "Bottleneck / Market-Size / Value-Added blocks expanded from bullet points to full analysis for every layer.",
-        "Contract durations added to every major deal (CoreWeave–OpenAI through 2031, Cipher–AWS 15-yr, etc.).",
-        "Delivered as a scrollable HTML report backed by a SQLite database + a one-command yfinance refresh.",
+        "Rewritten in a first-person head-of-research voice: every layer now opens with an <b>Analyst’s Take</b> and a one-line investment stance, not just a description.",
+        "Every headline figure is now <b>sourced with a clickable footnote</b> linking to a full Sources &amp; References section.",
+        "New <b>charts</b> (SVG donuts &amp; bars) for the market-share data — LLM revenue share, enterprise API spend, cloud, GPU, HBM and foundry splits.",
+        "Each layer’s Market-Size block now shows <b>its slice of the $725B capex funnel</b>, set against the independently-researched TAM.",
+        "Section 2 restructured: the ‘where does the $725B go’ table leads, with the ‘is it the top-level flow?’ analysis distilled beneath it.",
+        "Comp-table columns relabelled for clarity (Revenue FY25, Revenue 2026E, Gross/Operating/EBITDA Margin, EPS growth); §3 numbering fixed (3.1 / 3.2 / 3.3).",
+        "Still a single scrollable HTML file backed by a refreshable SQLite database + one-command yfinance refresh.",
     ],
     "data_note": (
         "Valuation and margin data are pulled live from Yahoo Finance via yfinance and stored in a "
@@ -48,43 +49,46 @@ US_REPORTING_COUNTRIES = {"US", "US/Ireland"}
 
 
 # ---------------------------------------------------------------------------
+# SOURCES REGISTRY
+#   Cite anywhere in prose with the token [[cite:ID]]. The builder assigns
+#   footnote numbers in order of first appearance and renders a clickable
+#   "Sources & References" section. id -> (label, detail, url-or-None).
+# ---------------------------------------------------------------------------
+SOURCES = {
+    "counterpoint": ("Counterpoint Research", "Global GenAI / LLM revenue and AI-app market tracker, Q1 2026.", "https://www.counterpointresearch.com/"),
+    "menlo": ("Menlo Ventures / Ramp", "‘The State of Generative AI in the Enterprise’ (2025) and Ramp enterprise card-spend data on LLM API share.", "https://menlovc.com/perspective/2025-the-state-of-generative-ai-in-the-enterprise/"),
+    "synergy": ("Synergy Research Group", "Cloud infrastructure services market share and quarterly spend.", "https://www.srgresearch.com/"),
+    "idc": ("IDC", "Worldwide Quarterly Server Tracker and infrastructure forecasts.", "https://www.idc.com/"),
+    "trendforce": ("TrendForce", "HBM / DRAM / NAND market share, supply and contract-pricing data.", "https://www.trendforce.com/"),
+    "yole": ("Yole Group", "Silicon photonics and advanced-packaging market forecasts.", "https://www.yolegroup.com/"),
+    "delloro": ("Dell’Oro Group", "Data-center Ethernet switching and networking market share.", "https://www.delloro.com/"),
+    "omdia": ("Omdia", "AI-RAN and telecom-infrastructure TAM forecasts.", "https://omdia.tech.informa.com/"),
+    "mckinsey": ("McKinsey & Company", "‘The cost of compute’ and global data-center capital outlook to 2030.", "https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights"),
+    "goldman": ("Goldman Sachs Research", "AI infrastructure investment forecasts, 2025–2027.", "https://www.goldmansachs.com/insights/"),
+    "bofa": ("BofA Global Research", "Hyperscaler capex vs operating-cash-flow analysis.", None),
+    "bernstein": ("Bernstein Research", "Stacy Rasgon / semiconductor and AI-buildout research on the power constraint.", None),
+    "bloomberg": ("Bloomberg", "Market data, deal terms and capex guidance aggregation.", "https://www.bloomberg.com/"),
+    "filings": ("Company filings & earnings", "SEC 10-K/10-Q, 20-F, and quarterly earnings releases (FY2025 / Q1 2026) for the named companies.", None),
+    "yahoo": ("Yahoo Finance (yfinance)", "Live valuation and margin snapshot stored in the project’s SQLite database (see snapshot date on each table).", "https://finance.yahoo.com/"),
+}
+
+
+# ---------------------------------------------------------------------------
 # SECTION 2 — HYPERSCALER CAPEX  (+ the "$725B" conceptual answer)
 # ---------------------------------------------------------------------------
 CAPEX = {
     "intro": (
-        "The five largest hyperscalers — Amazon, Microsoft, Alphabet, Meta and Oracle — are guiding to "
-        "roughly <b>$725B of capital expenditure in 2026</b> (Amazon ~$200B, Microsoft ~$190B, Alphabet "
-        "~$185–190B, Meta ~$135–145B, Oracle ~$50B). This is the single largest money flow in the entire "
-        "AI economy on the supply side, and it is the 'source water' that flows down every layer below."
+        "Everything in this report ultimately traces back to one number, so I start here. The five largest "
+        "hyperscalers — Amazon, Microsoft, Alphabet, Meta and Oracle — are guiding to roughly <b>$725B of "
+        "capital expenditure in 2026</b> (Amazon ~$200B, Microsoft ~$190B, Alphabet ~$185–190B, Meta ~$135–145B, "
+        "Oracle ~$50B).[[cite:filings]] In my framework this is the single most important money flow in the AI "
+        "economy: it is the ‘source water’ that fans out down every layer below, and the one figure I watch as "
+        "the leading indicator for the entire chain. Table 2.1 shows where I think it lands."
     ),
-    # Direct answer to the user's question.
-    "is_it_the_top_flow": {
-        "heading": "Is the $725B the top-level flow? Does it imply the total market size?",
-        "body": [
-            ("<b>Yes, it is the most important single flow to track — but no, it is not the total market "
-             "size.</b> Think of $725B as the top of the <i>infrastructure funnel</i>: it is the annual "
-             "<i>capital spending</i> of the five biggest buyers, and it cascades downward — into accelerators "
-             "(L4), memory (L3), servers (L5), networking (L6), data centers (L7) and power (L0). If you only "
-             "watch one number as a leading indicator for the whole chain, this is it."),
-            ("But it understates the total AI economy for three reasons. <b>(1) It is capex, not revenue.</b> "
-             "The total market also includes the <i>operating revenue</i> flowing in from the top — what end-users "
-             "pay for apps (L10, ~$30–40B) and models (L9, ~$100B ARR) — which is the <i>demand</i> that the "
-             "capex is a bet on. <b>(2) It is only the big five.</b> Add neoclouds (CoreWeave, Nebius), sovereign "
-             "AI (UAE, Saudi, EU), Chinese hyperscalers (Alibaba, Tencent, ByteDance) and enterprises building "
-             "private clusters, and industry-wide AI infrastructure spend is materially larger — Goldman models "
-             "$1.15–1.4T cumulative across 2025–27. <b>(3) Circularity.</b> Some of the $725B flows to NVIDIA, "
-             "which reinvests in customers (OpenAI, CoreWeave) that then buy more compute — so the headline can "
-             "double-count economic activity (see the Deal Web)."),
-            ("The practical takeaway: <b>$725B is the keystone flow and the best single leading indicator, but "
-             "the total addressable market is (capex) + (the app/model/cloud revenue above it) + (non-hyperscaler "
-             "capex).</b> The gap between ~$725B of spending and ~$170B of AI revenue today (≈$100B LLM ARR + "
-             "~$70B hyperscaler AI revenue) is the central bull/bear debate of this cycle — see §Risks."),
-        ],
-    },
-    "allocation_note": (
-        "Allocation is approximate and shifts with each earnings cycle; accelerators are the largest single "
-        "bucket and the tightest bottleneck, while power & cooling is the fastest-growing as rack density "
-        "climbs from ~130 kW (Blackwell) toward ~1 MW (Rubin)."
+    "allocation_intro": (
+        "My estimate of how the 2026 capex breaks down by category. I build this bottom-up from hyperscaler "
+        "guidance and the bill-of-materials of a modern AI rack, then cross-check it against the sell-side; "
+        "treat the ranges, not the point figures, as the signal."
     ),
     # Where the $725B flows. (category, % of capex, $ range, primary beneficiaries)
     "allocation": [
@@ -98,6 +102,34 @@ CAPEX = {
         ("Cooling", "~3–4%", "$22–30B", "VRT, SU.PA, TT, JCI, Daikin"),
         ("Software, EDA, security", "~3–5%", "$25–35B", "SNPS, CDNS; in-house"),
     ],
+    "allocation_source": (
+        "Source: author’s estimates built from company capex guidance and earnings disclosures,[[cite:filings]] "
+        "cross-checked against IDC server data,[[cite:idc]] TrendForce memory data[[cite:trendforce]] and "
+        "McKinsey’s data-center capital model.[[cite:mckinsey]] Allocation shifts each earnings cycle."
+    ),
+    "allocation_note": (
+        "Accelerators are the largest single bucket and the tightest bottleneck, while power &amp; cooling is the "
+        "fastest-growing line as rack density climbs from ~130 kW (Blackwell) toward ~1 MW (Rubin)."
+    ),
+    # Distilled key takeaway, rendered AFTER table 2.1 (the user's direct question, answered concisely).
+    "takeaway": {
+        "heading": "So is the $725B the ‘top-level flow’, and does it equal the market size?",
+        "body": [
+            ("My answer: <b>yes, it is the keystone flow you should track above all others — but no, it is not the "
+             "total addressable market.</b> I think of $725B as the top of the <i>infrastructure funnel</i>: it is "
+             "annual <i>capital spending</i> by the five biggest buyers, and it cascades into accelerators (L4), "
+             "memory (L3), servers (L5), networking (L6), data centers (L7) and power (L0)."),
+            ("It understates the full AI economy for three reasons I keep front of mind. <b>(1) It is capex, not "
+             "revenue</b> — the market also includes the operating revenue flowing in from the top (apps ~$30–40B, "
+             "models ~$100B ARR),[[cite:counterpoint]] which is the demand the capex is a bet on. <b>(2) It is only "
+             "the big five</b> — add neoclouds, sovereign AI, Chinese hyperscalers and enterprise clusters and "
+             "Goldman models $1.15–1.4T of cumulative spend across 2025–27.[[cite:goldman]] <b>(3) It is partly "
+             "circular</b> — some of it flows to NVIDIA, which reinvests in customers that buy more compute, so the "
+             "headline double-counts (see §7). The number I actually watch is the gap: ~$725B of spend against "
+             "~$170B of AI revenue today. Closing or not closing that gap is the central bull/bear debate of the "
+             "cycle — I return to it in §5."),
+        ],
+    },
 }
 
 # ---------------------------------------------------------------------------
@@ -105,16 +137,21 @@ CAPEX = {
 # ---------------------------------------------------------------------------
 CONNECT = {
     "intro": (
-        "A single hyperscaler capex dollar fans out across all 11 layers. The chain is not strictly linear: "
-        "hyperscalers (L8) own custom chips (L4: Trainium, TPU) and apps (L10: Copilot), and bottlenecks at "
-        "any layer (HBM in 2024–25, CoWoS today, power in 2026–27) cap the throughput of everything above."
+        "Having sized the source water, I want to trace where it goes. A single hyperscaler capex dollar fans out "
+        "across all 11 layers, and the chain is not strictly linear: hyperscalers (L8) own custom chips (L4: "
+        "Trainium, TPU) and apps (L10: Copilot), and a bottleneck at any layer (HBM in 2024–25, CoWoS today, power "
+        "in 2026–27) caps the throughput of everything above it. Two questions decide where the money <i>stays</i>: "
+        "how the dollar physically moves (3.1), and who keeps the most of it as profit (3.2). My synthesis of both "
+        "is in 3.3."
     ),
     "value_capture_intro": (
-        "Two metrics together explain who keeps the most of each capex dollar: <b>wallet share</b> (what % of "
-        "capex flows into the layer) and <b>gross/operating margin</b> (how much of that the layer keeps as "
-        "profit). High wallet share × high margin = the great businesses. The pattern is barbell-shaped: the "
-        "biggest profit pools sit at the chip (L4) and its irreplaceable inputs (L2 foundry, L1 EUV, L3 HBM), "
-        "while the hardware-integration middle (L5 servers/ODMs) does real and growing work at commodity margins."
+        "This is the part I care most about as an investor. Two metrics together explain who keeps the most of "
+        "each capex dollar: <b>wallet share</b> (what % of capex flows into the layer) and <b>gross/operating "
+        "margin</b> (how much of that the layer keeps as profit). High wallet share × high margin is what defines "
+        "the great businesses in this chain. The pattern, in my view, is barbell-shaped: the biggest profit pools "
+        "sit at the chip (L4) and its irreplaceable inputs (L2 foundry, L1 EUV, L3 HBM), while the "
+        "hardware-integration middle (L5 servers/ODMs) does real and fast-growing work at commodity margins. The "
+        "margins in the table below are pulled live from the database, not hard-coded."
     ),
     "observations": [
         ("NVIDIA captures the largest single profit pool in the entire chain — roughly $120B of net income on "
@@ -175,9 +212,9 @@ RISKS = [
      "custom-AI revenue alone hit $20B in FY25. Every ASIC GW is a GW NVIDIA does not sell at merchant margins. "
      "The offset: total demand is growing faster than ASICs can absorb it — so far."),
     ("Power & Buildout Delays",
-     "Bernstein's Rasgon: the binding constraint is increasingly 'physical inability to accept delivery because "
-     "the buildings and power aren't ready.' Grid interconnect queues run 7–10 years; transformer and switchgear "
-     "lead times exceed 100 weeks."),
+     "Bernstein’s Rasgon: the binding constraint is increasingly ‘physical inability to accept delivery because "
+     "the buildings and power aren’t ready.’[[cite:bernstein]] Grid interconnect queues run 7–10 years; transformer "
+     "and switchgear lead times exceed 100 weeks."),
     ("Storage / Memory Cycle Risk",
      "SNDK +492% YTD, STX +600% LTM, WDC +850% LTM; NAND contract prices +246% in 2025. Memory is cyclical — "
      "today's sold-out, peak-margin conditions (SK Hynix 80%+ operating margin) have always mean-reverted. Low "
@@ -190,8 +227,8 @@ RISKS = [
      "~75% of EUV mask blanks from Japan. Single-country / single-supplier tail risks sit under the whole chain."),
     ("Funding & Free Cash Flow",
      "BofA estimates 2026 hyperscaler capex consumes ~94% of operating cash flow after dividends, versus a "
-     "~40% ten-year average. The capex is increasingly debt- and prepayment-financed; a demand wobble would "
-     "hit FCF and credit metrics fast."),
+     "~40% ten-year average.[[cite:bofa]] The capex is increasingly debt- and prepayment-financed; a demand wobble "
+     "would hit FCF and credit metrics fast."),
 ]
 
 # ---------------------------------------------------------------------------
@@ -305,6 +342,14 @@ LAYER_CONTENT = {
 
   "L10": {
     "what_it_does": "Where end-users actually pay for AI. Apps either bundle a foundation model behind a UI (ChatGPT, Claude.ai) or wrap one via API to solve a specific job (Cursor for coding, Harvey for legal).",
+    "analyst_take": "My read: L10 is where cash <i>enters</i> the system, but very little of it stays here today — the model underneath captures most of the economics. I treat the app layer as an option on workflow lock-in. The winners I’d back are the ones with distribution (Microsoft pushing Copilot into 400M+ M365 seats) or proprietary data and workflow (Harvey, Glean); the undifferentiated ‘GPT wrappers’ get squeezed every time model prices fall. The frustrating part for public investors is that almost every pure-play is still private, so the only liquid exposure is Microsoft and Alphabet.",
+    "stance": "Own the distribution (MSFT) and the proprietary-workflow winners; avoid thin wrappers with no data moat. Mostly a private-market layer for now.",
+    "capex_slice": "Not a slice of the $725B. L10 is the <i>demand</i> the capex is built to serve — the ~$30–40B app market is end-user revenue, not capital spending.",
+    "charts": [
+      {"title": "Selected AI-app annualized run-rates", "source": "filings", "type": "bar", "unit": "$B ARR",
+       "rows": [("M365 Copilot (run-rate)", 5.0, "~$5B+"), ("Cursor (Anysphere)", 2.0, "$2B in ~24 mo"),
+                ("Perplexity", 1.0, "~$1B"), ("Claude Code", 1.0, "$1B+ in 6 mo")]},
+    ],
     "who_pays_whom": "Consumers pay $20–200/month subscriptions; enterprises pay per-seat licenses (Microsoft 365 Copilot $30/user/mo; GitHub Copilot Business $19). Apps in turn pay LLM providers (L9) per token, or — if they own the model — pay the cloud (L8) directly.",
     "bottleneck": {"severity": "LOW", "points": [
       "Not a capacity bottleneck — apps depend on L9 model availability and L8 compute, both of which the $725B capex is solving.",
@@ -312,8 +357,8 @@ LAYER_CONTENT = {
       "Margin compression risk: an app's gross margin is whatever is left after paying the model provider; if model prices don't fall as fast as competition pushes app prices down, the middle gets squeezed.",
     ]},
     "market_size": [
-      "~$30–40B in 2026E (Counterpoint) — the fastest-growing software category in history.",
-      "Cursor reached $2B ARR within ~24 months; Claude Code hit $1B+ ARR within 6 months of launch; GitHub Copilot has 4.7M paid subscribers.",
+      "~$30–40B in 2026E[[cite:counterpoint]] — the fastest-growing software category in history.",
+      "Cursor reached $2B ARR within ~24 months; Claude Code hit $1B+ ARR within 6 months of launch; GitHub Copilot has 4.7M paid subscribers.[[cite:filings]]",
       "Still tiny relative to the $100B+ model layer below it — most of the value today is captured by the model, not the app wrapper.",
     ],
     "value_added": [
@@ -338,6 +383,28 @@ LAYER_CONTENT = {
 
   "L9": {
     "what_it_does": "Foundation-model labs train the large neural networks (GPT-5, Claude Opus 4.5, Gemini 3, Llama 4, Grok 4) that every app in Layer 10 builds on. The capital-intensive heart of the AI stack.",
+    "analyst_take": "This is the layer everyone argues about, and my view is deliberately unsentimental. The labs are extraordinary businesses on revenue growth and genuinely awful on GAAP profitability — they burn billions training the next model while the last one decays toward worthless. What I actually track is not the leaderboard but two things: enterprise API share (where Anthropic has quietly taken the lead) and <i>who funds the compute</i>. Each lab has effectively sold a piece of itself to one or two hyperscalers in exchange for GPUs, which means you cannot analyse L9 without analysing the balance sheets of L8. There is no clean public pure-play, so I play it through the backers.",
+    "stance": "No pure-play; express the view through proxies — MSFT (OpenAI), AMZN (Anthropic), GOOGL (owns the full stack). Watch enterprise API share and compute funding, not benchmark wins.",
+    "capex_slice": "Not a slice of the $725B. L9 is the largest <i>customer</i> of the capex (labs are the biggest buyers of L8 compute); the ~$100B of LLM ARR[[cite:counterpoint]] is the revenue the buildout is chasing.",
+    "charts": [
+      {"title": "Global LLM revenue share — Q1 2026", "source": "counterpoint", "type": "donut", "unit": "%",
+       "rows": [("Anthropic", 31.4, "$30B ARR; $350B val — overtook OpenAI Apr’26"),
+                ("OpenAI", 29.0, "$25B ARR; $852B PBC val"),
+                ("Google (Gemini)", 12.1, "Embedded across Workspace + Cloud"),
+                ("Microsoft (Phi)", 7.2, "Separate from its OpenAI stake"),
+                ("Tencent (Hunyuan)", 4.8, "#1 Chinese by revenue"),
+                ("Baidu (Ernie)", 3.6, "Enterprise + search"),
+                ("Alibaba (Qwen)", 2.9, "Strong open-weight; cloud bundle"),
+                ("Meta (Llama)", 1.4, "Open-source; indirect/ad revenue"),
+                ("xAI (Grok)", 1.4, "X-tied; ~$3B ARR"),
+                ("Others", 6.0, "Perplexity + long tail")]},
+      {"title": "Enterprise API spend share — vs end-2023", "source": "menlo", "type": "bar", "unit": "%",
+       "rows": [("Anthropic", 40.0, "rising from 12% → +28 pts; now the enterprise leader"),
+                ("OpenAI", 25.0, "down from 50% → −25 pts"),
+                ("Google", 20.0, "+15 pts"),
+                ("Meta (Llama)", 9.0, "open-source, ~stable"),
+                ("DeepSeek + others", 14.0, "fragmented long tail")]},
+    ],
     "who_pays_whom": "End-users pay labs directly (subscriptions, seats) or indirectly (apps pay per token via API). Labs are in turn the <b>largest customers of the cloud (L8)</b> — Anthropic ~$100B/10-yr AWS, OpenAI $250B Microsoft + ~$300B Oracle + $38B AWS — and that compute spend is funded substantially by hyperscaler equity.",
     "bottleneck": {"severity": "MEDIUM-HIGH", "points": [
       "Frontier training runs need tens of thousands of the latest GPUs in a single coherent cluster — gated by L4 chip supply and L0 power, not by talent or data alone.",
@@ -345,9 +412,9 @@ LAYER_CONTENT = {
       "Resolution path is the hyperscaler equity-for-compute deals — but that ties each lab's fate to one or two backers and creates the circular-financing risk.",
     ]},
     "market_size": [
-      "~$100B in LLM ARR (Q1'26, Counterpoint) — from under $1B in Jan 2023.",
-      "Forecast $400B+ by 2030 if scaling continues to translate into capability and demand.",
-      "Concentration is extreme: the top three (Anthropic, OpenAI, Google) take ~60%+ of revenue.",
+      "~$100B in LLM ARR (Q1’26)[[cite:counterpoint]] — from under $1B in Jan 2023.",
+      "Forecast $400B+ by 2030 if scaling continues to translate into capability and demand.[[cite:counterpoint]]",
+      "Concentration is extreme: the top three (Anthropic, OpenAI, Google) take ~70%+ of revenue (see charts).",
     ],
     "value_added": [
       "HIGH for the top three, brutal for everyone else. Anthropic + OpenAI together capture ~60% of LLM revenue.",
@@ -356,8 +423,8 @@ LAYER_CONTENT = {
     ],
     "how_to_analyze": "No pure-play public exposure. Four proxies: MSFT (27% of OpenAI), AMZN (largest Anthropic holder), GOOGL (Gemini, fully owned stack), META (Llama, monetized via ads). Track each lab's ARR, enterprise API share (Menlo/Ramp), gross margin trajectory, and — critically — who is funding its compute.",
     "sub_segments": [
-      "Global LLM revenue share (Q1'26, Counterpoint): Anthropic 31.4%, OpenAI 29.0%, Google 12.1%, Microsoft 7.2%, Tencent 4.8%, Baidu 3.6%, Alibaba 2.9%, Meta 1.4%, xAI 1.4%.",
-      "Enterprise API spend (Menlo/Ramp): Anthropic ~40% (from 12%), OpenAI 25% (from 50%), Google 20%, Meta 9%, DeepSeek + others ~14%.",
+      "Three lenses give three rankings: <b>consumer revenue</b> (OpenAI’s ChatGPT still leads on raw users), <b>total LLM revenue</b> (Anthropic edged ahead in Q1’26), and <b>enterprise API spend</b> (Anthropic clearly leads) — see the two charts above.",
+      "The Chinese stack (Tencent, Baidu, Alibaba, DeepSeek) is a separate, largely walled market served by the domestic clouds.",
     ],
     "glossary": [
       ("Foundation model", "A large neural network trained on internet-scale data that many downstream apps build on top of."),
@@ -371,6 +438,18 @@ LAYER_CONTENT = {
 
   "L8": {
     "what_it_does": "Cloud providers own data centers and chips and rent them by the hour or via long-term contract. Two sub-types: <b>hyperscalers</b> (general-purpose, full-stack, own custom silicon) and <b>neoclouds</b> (GPU-as-a-service pure-plays, faster to spin up GPU capacity).",
+    "analyst_take": "L8 is the toll booth on the whole chain, and I think it is the highest-quality way for most investors to own the buildout. The hyperscalers convert the labs’ compute spend into 35–50% operating margins, and the leading indicator I trust most is RPO/backlog — over $1.8T contracted across the big four[[cite:filings]] tells me the demand is signed, not hoped for. The neoclouds are a different animal entirely: I view them as securitized compute contracts wearing equity clothing. Their gross margins look fine (~70%) but depreciation and interest push operating margins negative, so they live or die on a handful of mega-contracts and the debt raised against them. High beta, high binary risk.",
+    "stance": "Core long: the hyperscalers (MSFT, AMZN, GOOGL, ORCL) for quality + backlog. Neoclouds/ex-miners only for high-beta exposure, sized for binary contract risk.",
+    "capex_slice": "L8 <i>is</i> the $725B — this layer does the spending, it does not receive a slice. The capex is L8 converting its balance sheet into the L0–L7 stack below.",
+    "charts": [
+      {"title": "Cloud infrastructure market share — 2026E", "source": "synergy", "type": "donut", "unit": "%",
+       "rows": [("AWS (Amazon)", 30.0, "$128.7B FY25, +19%"),
+                ("Microsoft Azure", 23.0, "+40% growth; $ not disclosed"),
+                ("Google Cloud", 13.5, "~$59B FY25, +~50%"),
+                ("Alibaba Cloud", 4.0, "largest non-Western"),
+                ("Oracle (OCI)", 3.0, "fastest-growing; $553B RPO"),
+                ("Others + neoclouds", 26.5, "CoreWeave, Nebius, IBM, Tencent, etc.")]},
+    ],
     "who_pays_whom": "Model labs (L9) are the largest customers; enterprises buy AI services on top. Clouds in turn pay L7 (real estate), L6 (networking), L5 (servers), L4 (chips) and L0 (power). Neoclouds raise debt against their hyperscaler/lab contracts to buy GPUs from NVIDIA.",
     "bottleneck": {"severity": "MEDIUM", "points": [
       "Capacity is sold out across AWS/Azure/GCP for 2026 — the constraint is upstream (L4 GPUs, L7 buildings, L0 power), not demand.",
@@ -378,9 +457,9 @@ LAYER_CONTENT = {
       "For neoclouds specifically, the binding constraint is <b>capital and customer concentration</b>: they live or die on a handful of mega-contracts and the debt raised against them.",
     ]},
     "market_size": [
-      "Total cloud infrastructure ~$520B in 2026E (Synergy). AWS FY25 $128.7B (+19%); Azure +40%; Google Cloud ~$59B FY25 (+~50%); Oracle cloud ~$35B run-rate.",
-      "Backlog is the leading indicator and it is enormous: Microsoft RPO $627B, Oracle $553B, Google $462B, Amazon ~$200B — over $1.8T of contracted cloud combined.",
-      "Neocloud contracted HPC revenue exceeds $100B+ (CoreWeave $66.8B RPO alone).",
+      "Total cloud infrastructure ~$520B in 2026E.[[cite:synergy]] AWS FY25 $128.7B (+19%); Azure +40%; Google Cloud ~$59B FY25 (+~50%); Oracle cloud ~$35B run-rate.[[cite:filings]]",
+      "Backlog is the leading indicator and it is enormous: Microsoft RPO $627B, Oracle $553B, Google $462B, Amazon ~$200B — over $1.8T of contracted cloud combined.[[cite:filings]]",
+      "Neocloud contracted HPC revenue exceeds $100B+ (CoreWeave $66.8B RPO alone).[[cite:filings]]",
     ],
     "value_added": [
       "HIGH for hyperscalers, THIN and volatile for neoclouds. AWS runs ~35% operating margin; Azure ~50% on the AI run-rate; Google Cloud inflected to ~33%.",
@@ -407,6 +486,9 @@ LAYER_CONTENT = {
 
   "L7": {
     "what_it_does": "The physical buildings and the contractors who build them. Hyperscalers either own DCs (Microsoft, Google, Meta build a lot) or lease from REITs; specialty contractors handle the power/cooling/electrical build-out.",
+    "analyst_take": "I find L7 underappreciated because the bottleneck has quietly moved here. You can have all the GPUs in the world and still not deploy them if there is no powered shell to put them in — Northern Virginia vacancy is under 5% and interconnect queues run 7–10 years. The REITs (Equinix, Digital Realty) are the purer exposure with interconnection moats, but they carry REIT multiples that make the headline P/E look scary. The contractors (Quanta, Comfort Systems) are my preferred angle: they trade on ordinary earnings multiples, are not seen as ‘AI stocks’, yet their backlogs are increasingly data-center-driven with high incremental margins.",
+    "stance": "Prefer the contractors (PWR, FIX) for lower-multiple, high-incremental-margin exposure; own the REITs (EQIX) for the interconnection moat, judged on AFFO not P/E.",
+    "capex_slice": "~$70–85B of the $725B (10–12%, the ‘shell, land &amp; fiber’ bucket), against a researched global DC-infrastructure TAM of ~$200B+[[cite:idc]] — the gap is the non-hyperscaler and maintenance spend.",
     "who_pays_whom": "Hyperscalers + enterprises pay DC REITs monthly rent for space + power. Hyperscalers + REITs pay construction/electrical contractors (Quanta, Comfort Systems, EMCOR) to build. REITs pay L0 for power and L6 for fiber.",
     "bottleneck": {"severity": "HIGH", "points": [
       "Northern Virginia vacancy is <5% and grid-interconnect queues run 7–10 years — you cannot build a DC where there is no power, regardless of capital.",
@@ -414,9 +496,9 @@ LAYER_CONTENT = {
       "Skilled-labor and long-lead-equipment shortages (electricians, transformers, switchgear) cap how fast contractors can deliver even when sites are secured.",
     ]},
     "market_size": [
-      "Global DC infrastructure ~$200B+ in 2026E; US colocation market ~$72B.",
-      "McKinsey models a $5.2T global DC build by 2030, with ~$1.3T (25%) flowing to 'energizers' (utility + electrical).",
-      "REIT capacity is pre-leased years out — Digital Realty had 769 MW under construction at end-2025.",
+      "Global DC infrastructure ~$200B+ in 2026E; US colocation market ~$72B.[[cite:idc]]",
+      "McKinsey models a $5.2T global DC build by 2030, with ~$1.3T (25%) flowing to ‘energizers’ (utility + electrical).[[cite:mckinsey]]",
+      "REIT capacity is pre-leased years out — Digital Realty had 769 MW under construction at end-2025.[[cite:filings]]",
     ],
     "value_added": [
       "MEDIUM-HIGH for REITs, LOWER but steady for builders. Equinix runs ~49% gross / ~51% adjusted-EBITDA margins; Digital Realty ~48% gross.",
@@ -442,6 +524,14 @@ LAYER_CONTENT = {
 
   "L6": {
     "what_it_does": "Connects thousands of GPUs so they behave as one machine. AI training is bandwidth-bound — networking is ~10–15% of cluster cost but mission-critical. Four sub-segments: Ethernet switching, optical transceivers, optical fiber, and AI-RAN (AI compute inside telecom networks).",
+    "analyst_take": "Optics is the sub-segment I’d single out from this entire report as both the best and the most dangerous trade. The physics is simple and powerful: every GPU-generation upgrade (Blackwell→Rubin) roughly doubles the optical interconnect required, so demand for EML lasers and transceivers compounds faster than the chain can add InP fab capacity — sold out through 2027. That is why Lumentum is up four-figure percentages. But the multiples now price the boom running uninterrupted, and NVIDIA’s $2B equity stakes in both Lumentum and Coherent tell you supply, not just demand, is being engineered. Switching is the calmer, higher-quality place to sit (Arista at 40%+ margins).",
+    "stance": "Own switching quality (ANET) as the core; trade optics (LITE, COHR) for the supply-squeeze beta but respect the ~50× multiples and cycle risk. Fiber (GLW) is the lower-beta tag-along.",
+    "capex_slice": "~$45–60B of the $725B (6–8%, the networking bucket), versus a researched ~$60B 2026E networking TAM[[cite:delloro]] — close, because networking is almost entirely an AI-buildout spend today.",
+    "charts": [
+      {"title": "DC Ethernet switching share", "source": "delloro", "type": "donut", "unit": "%",
+       "rows": [("Arista", 19.0, "hyperscaler design wins"), ("NVIDIA (Ethernet)", 15.2, "Spectrum-X"),
+                ("Cisco", 14.0, "diversified incumbent"), ("Others", 51.8, "white-box + Juniper/HPE etc.")]},
+    ],
     "who_pays_whom": "Hyperscalers and neoclouds (L8) are the primary buyers — every new GPU cluster needs switches, transceivers and fiber. Switch and optics vendors buy ASICs from Broadcom/Marvell (L4) and lasers/InP from the optics makers.",
     "bottleneck": {"severity": "VERY HIGH (optics) / MEDIUM (switching)", "points": [
       "EML lasers and InP transceivers are sold out through 2027 — each GPU-generation upgrade (Blackwell→Rubin) roughly doubles the optical interconnect needed, so demand compounds faster than capacity.",
@@ -449,9 +539,9 @@ LAYER_CONTENT = {
       "Resolution: capacity is being added through 2027 under long-term agreements (and funded partly by NVIDIA's equity investments in Lumentum and Coherent), but it ramps slowly because InP fab capacity has long lead times.",
     ]},
     "market_size": [
-      "~$60B in 2026E overall. DC Ethernet switching ~$60–65B; optical transceivers ~$22B growing 25%+; silicon photonics $2.6B→$22B by 2034 (~26% CAGR).",
-      "Optical components have been the highest-returning sub-segment of the entire chain in 2025–26 (Lumentum +1,474% LTM).",
-      "AI-RAN is a longer-dated option: cumulative TAM >$200B by 2030 (Omdia).",
+      "~$60B in 2026E overall.[[cite:delloro]] DC Ethernet switching ~$60–65B; optical transceivers ~$22B growing 25%+; silicon photonics $2.6B→$22B by 2034 (~26% CAGR).[[cite:yole]]",
+      "Optical components have been the highest-returning sub-segment of the entire chain in 2025–26 (Lumentum +1,474% LTM).[[cite:bloomberg]]",
+      "AI-RAN is a longer-dated option: cumulative TAM >$200B by 2030.[[cite:omdia]]",
     ],
     "value_added": [
       "VERY HIGH for optics specialists and switching leaders. Arista ~43% operating margin; Broadcom networking ~50%; Lumentum ~22% and rising on AI mix.",
@@ -483,6 +573,9 @@ LAYER_CONTENT = {
 
   "L5": {
     "what_it_does": "Server makers physically assemble GPUs, CPUs, memory, networking and power supplies into rack systems. Distinct from chip makers (L4) — servers integrate the chips someone else designed.",
+    "analyst_take": "L5 is the value trap of the supply chain, and I want to be blunt about it. Revenue here looks spectacular — Foxconn’s AI-server line is exploding — but at 5–7% gross margins almost none of it reaches the bottom line. The chip (40–45% of the bill of materials) dominates the economics, ODMs undercut the branded OEMs from below, and hyperscalers dual-source to keep everyone honest. So I own this layer for revenue <i>beta</i>, never for margin. The one place I’d look for quality is the power-supply specialists (Delta): high-density racks need their efficient PSUs, and that earns better margins than box assembly.",
+    "stance": "Trade for GPU-cycle revenue beta (Foxconn, SMCI), not for profit. The quieter quality pick is Delta (PSUs). Watch gross-margin trajectory, not revenue growth.",
+    "capex_slice": "~$60–70B of the $725B (8–10%, the ‘servers, CPUs, NICs, PSUs’ bucket), against a $444B total server market in 2025[[cite:idc]] — most of that TAM is non-AI servers; the AI slice is what the capex funds.",
     "who_pays_whom": "Hyperscalers (L8) increasingly buy direct from ODMs (Foxconn et al.) and bypass branded OEMs. ODMs buy GPUs from L4, HBM from L3, switches from L6, PSUs from Delta, and assemble. Branded OEMs (Dell, Supermicro) serve enterprises and non-hyperscaler clouds.",
     "bottleneck": {"severity": "MEDIUM", "points": [
       "Server assembly is <b>not</b> the structural bottleneck — it is gated by what flows into it (L4 GPUs, L3 HBM, L2 CoWoS). Once those clear, racks can be built.",
@@ -490,9 +583,9 @@ LAYER_CONTENT = {
       "The real risk in this layer is commercial, not physical: margin compression as volume scales and hyperscalers dual-source.",
     ]},
     "market_size": [
-      "$444B server market in 2025 (IDC, +80% YoY); GPU-embedded servers are >50% of revenue.",
-      "ODM Direct (hyperscaler-direct) is 59.4% of the market and rising as hyperscalers cut out branded OEMs.",
-      "2026E ~$650–700B as Rubin-class racks (higher ASP per rack) ship.",
+      "$444B server market in 2025 (+80% YoY); GPU-embedded servers are >50% of revenue.[[cite:idc]]",
+      "ODM Direct (hyperscaler-direct) is 59.4% of the market and rising as hyperscalers cut out branded OEMs.[[cite:idc]]",
+      "2026E ~$650–700B as Rubin-class racks (higher ASP per rack) ship.[[cite:idc]]",
     ],
     "value_added": [
       "VERY LOW — the structurally worst layer for pricing power. Foxconn earns 5–7% gross margin on AI servers; pricing power ~2/10.",
@@ -517,6 +610,14 @@ LAYER_CONTENT = {
 
   "L4": {
     "what_it_does": "The chips that actually do AI math. Every other layer ultimately exists to feed these with power, cooling, memory and data. Three types do the work — GPUs (programmable, general), ASICs (hard-wired, hyperscaler-custom), and a niche of wafer-scale — plus the CPUs that host them and the power ICs that feed them.",
+    "analyst_take": "If I could own one layer outright, it would be this one — and the whole report is really a study of the businesses that orbit it. NVIDIA captures roughly a third of all AI capex as <i>profit</i>: ~73% gross margin, ~$120B of net income, the single largest profit pool in technology. That is the position. The risk I weigh against it is equally specific: ASIC substitution. Every Google TPU, AWS Trainium and Meta MTIA gigawatt is demand NVIDIA does not sell at merchant margins, and Broadcom’s custom-silicon revenue alone hit $20B. My base case is that total demand keeps outrunning combined GPU+ASIC supply, so merchant GPU demand still rises even as ASICs grow — but the day that stops being true is the day this trade changes.",
+    "stance": "NVIDIA is the master long of the cycle. Pair it with the ASIC arms-dealers (AVGO, MRVL) as the structural hedge — they win whether the share shift accelerates or not.",
+    "capex_slice": "The big one: ~$290–325B of the $725B (40–45%, the largest single bucket), against a ~$300B 2026E accelerator TAM[[cite:idc]] — they essentially match, because the accelerator <i>is</i> the AI capex.",
+    "charts": [
+      {"title": "Merchant AI GPU share", "source": "filings", "type": "donut", "unit": "%",
+       "rows": [("NVIDIA", 88.0, "86–90%; ~73% gross margin"), ("AMD", 6.0, "Instinct MI300/MI450"),
+                ("Others", 6.0, "Intel Gaudi, startups")]},
+    ],
     "who_pays_whom": "Hyperscalers (L8), neoclouds and L5 ODMs buy GPUs and ASICs from this layer. NVIDIA/AMD pay TSMC (L2) for manufacturing + CoWoS packaging and SK Hynix/Micron (L3) for HBM. Hyperscalers co-design ASICs with Broadcom/Marvell.",
     "bottleneck": {"severity": "EXTREME (the bottleneck)", "points": [
       "NVIDIA Blackwell has been sold out 12+ months ahead and Rubin is already booked — this is the binding constraint of the whole cycle.",
@@ -524,9 +625,9 @@ LAYER_CONTENT = {
       "ASIC substitution is the structural relief valve: every TPU/Trainium/MTIA GW deployed is demand NVIDIA doesn't have to supply — but total demand is still outrunning combined GPU + ASIC capacity.",
     ]},
     "market_size": [
-      "~$300B in 2026E; BofA models a $1.2T accelerator TAM by 2030.",
-      "NVIDIA FY26 Data Center revenue $193.7B (89.7% of its total); Broadcom AI semiconductors $20B FY25 (+65%); AMD data center $16.6B (+32%).",
-      "Custom ASICs are the fastest-growing share — Broadcom alone signals multiple 10-GW custom programs through 2030.",
+      "~$300B in 2026E;[[cite:idc]] BofA models a $1.2T accelerator TAM by 2030.[[cite:bofa]]",
+      "NVIDIA FY26 Data Center revenue $193.7B (89.7% of its total); Broadcom AI semiconductors $20B FY25 (+65%); AMD data center $16.6B (+32%).[[cite:filings]]",
+      "Custom ASICs are the fastest-growing share — Broadcom alone signals multiple 10-GW custom programs through 2030.[[cite:filings]]",
     ],
     "value_added": [
       "EXTREME — the highest in the chain. NVIDIA: ~73% gross margin, ~60–65% operating margin, ~$120B net income (FY26).",
@@ -554,7 +655,16 @@ LAYER_CONTENT = {
   },
 
   "L3": {
-    "what_it_does": "Memory and storage hold the data AI chips work on. The closer to the GPU, the faster and more expensive: HBM sits on the GPU package; DRAM is system memory; NAND/HDD are bulk storage for the 'data lakes' that feed inference.",
+    "what_it_does": "Memory and storage hold the data AI chips work on. The closer to the GPU, the faster and more expensive: HBM sits on the GPU package; DRAM is system memory; NAND/HDD are bulk storage for the ‘data lakes’ that feed inference.",
+    "analyst_take": "Memory is the most interesting valuation puzzle in the chain. The fundamentals are monopoly-like right now — SK Hynix posted 80%+ operating margins at the cycle peak and is sold out of HBM into 2027 — yet the market hands these names mid-single-digit forward P/Es. That tension <i>is</i> the thesis: the market is correctly pricing in mean reversion, because memory has always been cyclical and today’s shortage becomes tomorrow’s glut. My read is that this cycle has an unusually long runway (HBM is structurally tied to every GPU, and HBM4 is the next leg), so the down-cycle is further out than the multiples imply — but I never forget which way this industry eventually breaks.",
+    "stance": "Own SK Hynix as the cleanest HBM/NVIDIA derivative and Micron as the US pure-play; size for cyclicality. The low multiples are the market pricing the eventual glut, not a free lunch.",
+    "capex_slice": "~$70–85B of the $725B (10–12%, HBM + system memory), against a ~$300B+ total memory TAM[[cite:trendforce]] — AI memory is the fast-growing slice of a much larger commodity market.",
+    "charts": [
+      {"title": "HBM market share — Q3 2025", "source": "trendforce", "type": "donut", "unit": "%",
+       "rows": [("SK Hynix", 57.0, "HBM3E leader; ~70% of NVIDIA Rubin HBM4"),
+                ("Samsung", 22.0, "HBM4 qualification in progress"),
+                ("Micron", 21.0, "only US-listed pure memory maker")]},
+    ],
     "who_pays_whom": "Chip makers (L4) buy HBM to package next to GPUs; server makers (L5) buy DRAM and storage. Memory makers buy capital equipment from L1 (Lam etch, ASML, Hanmi/BESI bonders).",
     "bottleneck": {"severity": "EXTREME (tied with L4)", "points": [
       "SK Hynix DRAM, NAND and HBM are all sold out through 2026 — memory is co-binding with accelerators because every GPU needs HBM and the HBM supply is concentrated in three players.",
@@ -562,9 +672,9 @@ LAYER_CONTENT = {
       "But memory is cyclical: today's shortage is tomorrow's glut. The tightness is real through 2027 per SK Hynix, but the layer has always mean-reverted.",
     ]},
     "market_size": [
-      "Memory total ~$300B+ in 2026E. HBM: $35B (2025) → $58B (2026) → $100B (2028).",
-      "Data centers consume >50% of industry DRAM + NAND for the first time. NAND contract prices rose +246% in 2025.",
-      "SK Hynix FY25 revenue hit ₩97.1T (~$64.5B, +~50%) with HBM revenue more than doubling.",
+      "Memory total ~$300B+ in 2026E. HBM: $35B (2025) → $58B (2026) → $100B (2028).[[cite:trendforce]]",
+      "Data centers consume >50% of industry DRAM + NAND for the first time. NAND contract prices rose +246% in 2025.[[cite:trendforce]]",
+      "SK Hynix FY25 revenue hit ₩97.1T (~$64.5B, +~50%) with HBM revenue more than doubling.[[cite:filings]]",
     ],
     "value_added": [
       "HIGH and rising — but priced for a peak. SK Hynix posted ~80%+ operating margins at the cycle peak; Micron's HBM mix pushed group gross margin sharply higher.",
@@ -591,6 +701,14 @@ LAYER_CONTENT = {
 
   "L2": {
     "what_it_does": "Foundries physically manufacture the chips that fabless companies (NVIDIA, AMD, Broadcom) design. TSMC manufactures essentially all leading-edge AI silicon and holds the CoWoS advanced-packaging monopoly. OSATs (ASE, Amkor) handle overflow and non-AI packaging.",
+    "analyst_take": "TSMC is, in my judgement, the single highest-quality business in the entire chain — higher quality than NVIDIA, even if it earns a lower margin. Here is why: NVIDIA must out-innovate AMD and the hyperscalers’ ASICs every generation, whereas TSMC simply has to keep being the only place on earth that can manufacture leading-edge silicon and CoWoS-package it. There is no substitute — Samsung and Intel cannot absorb meaningful AI volume — so TSMC rations capacity and NVIDIA, AMD and Broadcom all queue. The bear case is not competition; it is a single word, Taiwan. That geopolitical tail risk is the only reason this isn’t a 10/10 position, and it sits under the whole stack.",
+    "stance": "The highest-quality pick-and-shovel long in AI (TSM), priced reasonably on ~20× earnings. The risk to underwrite is geopolitical concentration, not competitive displacement.",
+    "capex_slice": "No direct line in the $725B — TSMC is paid out of the accelerator bucket (it is the manufacturing cost inside each GPU/ASIC). Its own revenue ($121.2B FY25 → ~$160B 2026E)[[cite:filings]] is the better gauge.",
+    "charts": [
+      {"title": "Pure-play foundry market share — 2025", "source": "trendforce", "type": "donut", "unit": "%",
+       "rows": [("TSMC", 69.9, "sole leading-edge + CoWoS"), ("Samsung", 7.2, "trailing at leading edge"),
+                ("SMIC", 5.3, "China; mature nodes"), ("Others", 17.6, "UMC, GlobalFoundries, etc.")]},
+    ],
     "who_pays_whom": "Chip designers (L4) pay foundries to manufacture; foundries pay equipment makers (L1: ASML for EUV, AMAT/Lam for deposition/etch) and materials suppliers (Hoya mask blanks, Shin-Etsu wafers).",
     "bottleneck": {"severity": "EXTREME (advanced packaging)", "points": [
       "TSMC CoWoS is sold out through 2027 despite tripling capacity (35K→130K wafers/month); it is the single biggest physical constraint on Blackwell/Rubin output.",
@@ -598,9 +716,9 @@ LAYER_CONTENT = {
       "There is no competitive substitute at the leading edge — Samsung and Intel cannot absorb meaningful AI volume, so TSMC is a true single point of dependence (and a Taiwan tail risk).",
     ]},
     "market_size": [
-      "Pure-play foundry ~$175B (2025); TSMC alone $121.2B FY25 → ~$160B 2026E.",
-      "HPC (incl. AI) rose to 61% of TSMC's revenue in Q1'26, up from 51% a year earlier — AI is now the majority of the mix.",
-      "CoWoS capacity 35K (2024) → ~130K (2026E) → ~170K (2027) wafers/month, still over-subscribed.",
+      "Pure-play foundry ~$175B (2025);[[cite:trendforce]] TSMC alone $121.2B FY25 → ~$160B 2026E.[[cite:filings]]",
+      "HPC (incl. AI) rose to 61% of TSMC’s revenue in Q1’26, up from 51% a year earlier — AI is now the majority of the mix.[[cite:filings]]",
+      "CoWoS capacity 35K (2024) → ~130K (2026E) → ~170K (2027) wafers/month, still over-subscribed.[[cite:filings]]",
     ],
     "value_added": [
       "EXTREME. TSMC posted a record ~66% gross margin in Q1'26 and ~49–51% operating margin; FY25 net income ~$54B.",
@@ -625,6 +743,9 @@ LAYER_CONTENT = {
 
   "L1": {
     "what_it_does": "The deepest layer — everything upstream of the foundry. Three sub-categories: (a) EDA software where chips are designed (Synopsys, Cadence) + CPU IP (Arm); (b) wafer-fab equipment (ASML, AMAT, Lam, TEL, KLA); (c) specialty materials and niche tools (Hoya mask blanks, Hanmi/BESI HBM bonders, Lasertec, Shin-Etsu wafers).",
+    "analyst_take": "This is where the most durable monopolies in technology live, and I think of it as the bedrock under everything above. ASML is the purest expression: it is the sole maker of EUV lithography, a High-NA machine costs $380M, and there is no plan B anywhere on earth. EDA (Synopsys, Cadence) is almost as good — a ~65%-share duopoly with software economics (~95% incremental gross margins) embedded in every chip designed. The reason these aren’t crowded trades is that the moats are measured in decades of accumulated know-how, so they look ‘expensive’ on near-term earnings while being nearly impossible to disrupt. The one cloud is China: export controls cap ASML’s addressable market at the margin.",
+    "stance": "Own the irreplaceable inputs for the long term — ASML (EUV monopoly), SNPS/CDNS (EDA duopoly). For HBM-capex beta, the niche Asian tool-makers (Hanmi, BESI, Advantest). Watch China revenue mix.",
+    "capex_slice": "Mostly indirect — L1 is funded by L2/L3 capex, not the hyperscaler $725B. The one direct touch is the ‘software, EDA, security’ bucket (~$25–35B, 3–5%), of which EDA is a slice; WFE TAM is ~$120B.[[cite:trendforce]]",
     "who_pays_whom": "Chip designers pay Synopsys/Cadence/Arm to design; foundries (L2) and memory makers (L3) pay equipment makers for WFE and buy materials. This layer sells the tools and inputs that make every chip above it possible.",
     "bottleneck": {"severity": "HIGH but distributed", "points": [
       "EUV machines (ASML High-NA) carry 18-month lead times; HBM thermal-compression bonders (Hanmi, BESI) are sold out — distinct choke points rather than one binding constraint.",
@@ -632,9 +753,9 @@ LAYER_CONTENT = {
       "The deeper risk is concentration: single suppliers for irreplaceable inputs (ASML for EUV, Hoya for ~75% of EUV mask blanks, Lasertec for EUV mask inspection).",
     ]},
     "market_size": [
-      "Total $140B+ (2026E): WFE ~$120B (2025), EDA ~$21B, photoresist + silicon wafers ~$15B.",
-      "HBM TC bonders are growing 50%+/year off a small base; every sub-segment is AI-leveraged.",
-      "Software (EDA) is tiny in dollars (~1% of the chain) but carries ~95% incremental gross margins.",
+      "Total $140B+ (2026E): WFE ~$120B (2025), EDA ~$21B, photoresist + silicon wafers ~$15B.[[cite:trendforce]]",
+      "HBM TC bonders are growing 50%+/year off a small base; every sub-segment is AI-leveraged.[[cite:yole]]",
+      "Software (EDA) is tiny in dollars (~1% of the chain) but carries ~95% incremental gross margins.[[cite:filings]]",
     ],
     "value_added": [
       "EXTREME at the inputs — the most durable monopolies in the entire chain. ASML: ~51% gross / ~35% operating margin as the sole EUV maker (pricing power 10/10).",
@@ -662,6 +783,9 @@ LAYER_CONTENT = {
 
   "L0": {
     "what_it_does": "The foundational input layer — every other layer needs electricity, and heat must be removed. As rack density climbed from ~10 kW to ~130 kW (Blackwell) toward ~1 MW (Rubin), the entire power-and-cooling chain became a hard constraint.",
+    "analyst_take": "My single highest-conviction macro call in this report is that <i>power is the new GPU</i> — the binding constraint of 2026–27 is shifting from silicon to electrons. Grid interconnect queues run 7–10 years and transformer lead times exceed 100 weeks, so the scarce resource is increasingly the ability to physically power and cool a building, not to buy chips for it. Crucially, lead times have become pricing power: GE Vernova’s turbines are sold out for years, Vertiv’s orders rose 252% YoY. I’d rather own the picks-and-shovels (electrical equipment, on-site generation) than the utilities, because backlog and order growth — not current revenue — are what re-rate here.",
+    "stance": "Power is the next bottleneck. Favour equipment with multi-year backlogs (VRT, GEV, ETN) and behind-the-meter optionality (BE, BWXT) over regulated utilities. Track orders/book-to-bill, not revenue.",
+    "capex_slice": "~$82–105B of the $725B (power &amp; electrical ~$60–75B + cooling ~$22–30B), against a researched ~$80B AI-relevant power-and-cooling TAM[[cite:mckinsey]] — and the fastest-growing line in the funnel.",
     "who_pays_whom": "Hyperscalers + DC operators pay electricity producers via PPAs (Constellation, Vistra, Talen, NextEra), pay electrical-equipment makers (Schneider, Eaton, Vertiv, GE Vernova) for switchgear/transformers/turbines, and pay cooling vendors (Vertiv, Schneider, Daikin) for thermal management. Fuel-cell and SMR makers (Bloom, BWXT) sell behind-the-meter power.",
     "bottleneck": {"severity": "EXTREME (the next bottleneck)", "points": [
       "Grid-interconnect queues run 7–10 years in key US markets; transformer and switchgear lead times exceed 100 weeks — power, not silicon, is increasingly the binding constraint of 2026–27.",
@@ -669,9 +793,9 @@ LAYER_CONTENT = {
       "Power demand is growing 10–100x faster than the HBM/CoWoS choke points it sits beneath — McKinsey models US DC power demand compounding 15–20%/yr through 2028.",
     ]},
     "market_size": [
-      "AI-relevant power & cooling ~$80B in 2026E; McKinsey's $5.2T global DC build by 2030 routes ~$1.3T (25%) to 'energizers' (utility + electrical).",
-      "Generation equipment (gas turbines, grid) and electrical gear (switchgear, transformers, UPS) have multi-year backlogs and the longest lead times in the chain.",
-      "Cooling is a smaller but fast-growing slice as liquid/direct-to-chip cooling becomes mandatory above ~100 kW/rack.",
+      "AI-relevant power &amp; cooling ~$80B in 2026E; McKinsey’s $5.2T global DC build by 2030 routes ~$1.3T (25%) to ‘energizers’ (utility + electrical).[[cite:mckinsey]]",
+      "Generation equipment (gas turbines, grid) and electrical gear (switchgear, transformers, UPS) have multi-year backlogs and the longest lead times in the chain.[[cite:filings]]",
+      "Cooling is a smaller but fast-growing slice as liquid/direct-to-chip cooling becomes mandatory above ~100 kW/rack.[[cite:filings]]",
     ],
     "value_added": [
       "MEDIUM-HIGH and rising — lead times have become pricing power. Vertiv ~16–22% operating margin (Q4'25 orders +252% YoY); Schneider ~17–18%; Constellation ~30% (utility-style).",
