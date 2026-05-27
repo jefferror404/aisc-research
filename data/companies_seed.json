@@ -31,6 +31,7 @@
     {"ticker": "DLR", "name": "Digital Realty Trust", "country": "US", "primary_layer": "L7", "is_pure_play": 0, "fiscal_note": "REIT; FY = calendar year", "narrative": ""},
     {"ticker": "PWR", "name": "Quanta Services", "country": "US", "primary_layer": "L7", "is_pure_play": 0, "fiscal_note": "FY = calendar year", "narrative": ""},
     {"ticker": "FIX", "name": "Comfort Systems USA", "country": "US", "primary_layer": "L7", "is_pure_play": 0, "fiscal_note": "FY = calendar year", "narrative": ""},
+    {"ticker": "EME", "name": "EMCOR Group", "country": "US", "primary_layer": "L7", "is_pure_play": 0, "fiscal_note": "FY = calendar year", "narrative": ""},
     {"ticker": "ANET", "name": "Arista Networks", "country": "US", "primary_layer": "L6", "is_pure_play": 0, "fiscal_note": "FY = calendar year", "narrative": ""},
     {"ticker": "CSCO", "name": "Cisco Systems", "country": "US", "primary_layer": "L6", "is_pure_play": 0, "fiscal_note": "FY ends late Jul", "narrative": ""},
     {"ticker": "NOK", "name": "Nokia", "country": "Finland", "primary_layer": "L6", "is_pure_play": 0, "fiscal_note": "FY = calendar year; reports in EUR", "narrative": ""},

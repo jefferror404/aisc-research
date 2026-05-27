@@ -51,16 +51,17 @@ def main():
     for cl in layer_rows:
         cur.execute(
             """INSERT INTO company_layer (ticker, layer, layer_name, sublayer, category,
-                       segment_label, segment_rev_note, key_contracts, backlog_rpo, note, sort_order)
+                       segment_label, segment_rev_note, key_contracts, backlog_rpo, ai_rev_share, note, sort_order)
                VALUES (:ticker, :layer, :layer_name, :sublayer, :category,
-                       :segment_label, :segment_rev_note, :key_contracts, :backlog_rpo, :note, :sort_order)""",
+                       :segment_label, :segment_rev_note, :key_contracts, :backlog_rpo, :ai_rev_share, :note, :sort_order)""",
             {
                 "ticker": cl["ticker"], "layer": cl["layer"],
                 "layer_name": cl.get("layer_name", ""), "sublayer": cl.get("sublayer", ""),
                 "category": cl.get("category", ""), "segment_label": cl.get("segment_label", ""),
                 "segment_rev_note": cl.get("segment_rev_note", ""),
                 "key_contracts": cl.get("key_contracts", ""),
-                "backlog_rpo": cl.get("backlog_rpo", ""), "note": cl.get("note", ""),
+                "backlog_rpo": cl.get("backlog_rpo", ""),
+                "ai_rev_share": cl.get("ai_rev_share", ""), "note": cl.get("note", ""),
                 "sort_order": cl.get("sort_order", 0),
             },
         )

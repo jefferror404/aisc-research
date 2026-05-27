@@ -1,6 +1,36 @@
 # AI Supply Chain Equity Research — Project State Document
 ## Last Updated: May 27, 2026
-## Current Version: v11 (analyst-voice report, live on GitHub Pages)
+## Current Version: v12 (card-layout report, per-layer charts, AI-rev% column, live on GitHub Pages)
+
+---
+
+## 0a. v12 — Card Layout, Charts Everywhere, AI-Rev% Column (May 27, 2026)
+
+Content/presentation pass on the v11 pipeline (same DB + scripts). Edits in `data/narrative.py`, `data/layers_seed.json`, `data/companies_seed.json`, all four `scripts/`, and the builder. Report grew ~188 KB → ~230 KB. Verified via gstack `browse` (no console errors; 11 layer-heads, 21 charts, margin highlights all render).
+
+**Layout redesign (every layer):**
+- Two-column **layer header** (`render_layer_head`): left = three info cards (*What this layer does* / *Who pays whom* / *Key Metrics to Track*), right = *Analyst's Take* + stance. CSS `.layerhead`/`.infocard`/`.lhleft`/`.lhright`.
+- "How to analyze this layer" → **Key Metrics to Track** (now a card, reuses the `how_to_analyze` text).
+- **Margin that matters**: new `MARGIN_FOCUS` dict in narrative — per layer a `(margin_key, one-liner)`; the line shows in the Key Metrics card and the matching margin column is highlighted in the comp table (`.mfocus`). Framework: gross = pricing-power/software (L10/L9/L5/L4/L2/L1), operating = franchise profitability (L8/L6/L0), EBITDA = capital-intensive (L7/L3).
+- Sub-segments rendered as a **card grid** (`render_subsegments` splits on " — ").
+- GPU/CPU/ASIC box rebuilt on a **light theme** (was dark navy `#0f1b3d`); per-chip accent colors.
+
+**Comp tables (every layer):**
+- New **AI rev % of total** column (`ai_rev_share`, curated estimate per company-layer row, "~X% (est.)" / "100%" pure-play; for L8 it doubles as the cloud-revenue share). Added DB column `company_layer.ai_rev_share`.
+- New **Δ % YoY** column (computed FY25→2026E where both exist).
+- Sub-$1B revenue now shown in **millions** ($510M) via the updated `b()` formatter.
+
+**Charts (`EXTRA_CHARTS` dict, merged after each layer's own charts):**
+- L9: annual **LLM revenue trend** (2023→2030E bars). L8: **per-hyperscaler 2026E capex** + **big-5 capex history/forecast** bars; cloud-share donut legend now carries capex. L6: **optical transceiver / RAN / fiber** donuts (added to ethernet). L4: **GPU + ASIC + CPU** donuts (was GPU only). L3: **DRAM / NAND / HDD** donuts + sizes in titles (added to HBM). L1: **WFE + EDA** donuts.
+- L2: **TSMC capacity & AI-mix trajectory** fact table via new `EXTRA_TABLES` dict + `render_extra_table`.
+
+**Membership / data:**
+- Added **EMCOR (EME)** to L7 (companies_seed + layers_seed + fetched its market data via a targeted yfinance call). Quanta/Comfort Systems were already there.
+- Added **Meta** (L8, flagged captive — no external cloud, ~0% cloud-rev share, top-5 capex) and **Tencent (0700.HK)** (L8 Tencent Cloud) to the cloud table.
+- Added **Alibaba (9988.HK)** to L9 (Qwen).
+- L9 segment notes enriched with **lab-ownership stakes** (MSFT 27% OpenAI, AMZN largest Anthropic holder ~high-teens %, GOOGL/META own their models 100%, etc.).
+
+**Schema note:** `company_layer` gained `ai_rev_share TEXT`. Because the table pre-existed, the migration drops + recreates `company_layer` (it is fully rebuilt from seed; market_data/financials are keyed by ticker and untouched), then re-runs `1_init_db.py` + `2_seed_companies.py`. 83 companies, 96 layer appearances.
 
 ---
 
@@ -110,6 +140,7 @@ Interactive D3.js force-directed graph showing all major deals. v9 version is LA
 | v9 | Added per-layer Bottleneck (severity + resolution), Market Size, Value-Added/Margins analysis blocks (3-column colored cells). NEW §3.3 Value Capture Map quantifying margins by layer. HTML chart upgraded to LAYERED top-to-bottom layout. |
 | v10 | **Architecture pivot: SQLite DB + yfinance refresh pipeline + scrollable HTML report** (replaces static docx). Every public name now carries a full live comp set (FY rev, FY+1E, GM/OM/EBITDA, mkt cap, P/E TTM, fwd P/E, P/S, earnings growth) + segment-% of total. GPU vs CPU vs ASIC deep-dive added to L4. $725B "top flow vs total market" answered in §2. Bottleneck/Market/Value blocks expanded from bullets to full analysis. Contract durations added to every major deal. Deal elaboration paragraphs after each layer table. Network graph untouched (per user). |
 | v11 | **Analyst-voice overhaul + live hosting.** First-person Analyst's Take + investment stance per layer. Clickable numbered footnotes → §8 Sources & References (SOURCES registry). Inline SVG donuts/bars for share data. Per-layer slice of the $725B funnel in Market Size. §2 restructured (table 2.1 leads, takeaway below + sourced). §3 numbering fixed (3.1/3.2/3.3). L9 share tables restored as charts. Comp columns relabelled. Published to GitHub Pages (public repo `jefferror404/aisc-research`). |
+| v12 | **Card layout + charts everywhere + AI-rev% column.** Two-column layer header (3 info cards incl. Key Metrics to Track + Analyst's Take). New AI-rev-%-of-total and Δ%-YoY comp columns; per-layer "margin that matters" with highlighted column. Charts added across L9 (LLM trend), L8 (per-co + historical capex), L6 (optical/fiber/AI-RAN), L4 (GPU/ASIC/CPU), L3 (DRAM/NAND/HDD), L1 (WFE/EDA); TSMC capacity table re-added. Meta+Tencent added to L8, Alibaba to L9, EMCOR to L7; L9 ownership stakes shown. Sub-segments as cards; GPU/CPU/ASIC box light-themed. Sub-$1B revenue shown in millions. |
 
 ---
 

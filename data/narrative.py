@@ -12,16 +12,16 @@ Coverage date: May 2026. Severity scale for bottlenecks: LOW < MEDIUM < HIGH < E
 
 META = {
     "title": "The AI Supply Chain",
-    "subtitle": "An Equity Research Deep-Dive — v11",
+    "subtitle": "An Equity Research Deep-Dive — v12",
     "tagline": "11 Layers · Bottlenecks · Market Sizes · Value Capture · Live Comps",
     "coverage_date": "May 2026",
     "whats_new": [
-        "Rewritten in a first-person head-of-research voice: every layer now opens with an <b>Analyst’s Take</b> and a one-line investment stance, not just a description.",
-        "Every headline figure is now <b>sourced with a clickable footnote</b> linking to a full Sources &amp; References section.",
-        "New <b>charts</b> (SVG donuts &amp; bars) for the market-share data — LLM revenue share, enterprise API spend, cloud, GPU, HBM and foundry splits.",
-        "Each layer’s Market-Size block now shows <b>its slice of the $725B capex funnel</b>, set against the independently-researched TAM.",
-        "Section 2 restructured: the ‘where does the $725B go’ table leads, with the ‘is it the top-level flow?’ analysis distilled beneath it.",
-        "Comp-table columns relabelled for clarity (Revenue FY25, Revenue 2026E, Gross/Operating/EBITDA Margin, EPS growth); §3 numbering fixed (3.1 / 3.2 / 3.3).",
+        "Each layer now opens with a <b>two-column header</b>: three info cards (What this layer does / Who pays whom / Key Metrics to Track) on the left, my <b>Analyst’s Take</b> and stance on the right.",
+        "New <b>AI revenue % of total</b> column on every comp table (curated estimate; pure-plays = 100%), plus a <b>Δ % YoY</b> revenue-growth column.",
+        "Every layer flags the <b>margin that matters</b> (gross / operating / EBITDA) and highlights that column in the table.",
+        "Many more <b>charts</b>: annual LLM-revenue trend, per-hyperscaler &amp; historical capex, optical / fiber / AI-RAN, GPU / ASIC / CPU, DRAM / NAND / HDD, WFE &amp; EDA splits — plus a TSMC capacity-trajectory table.",
+        "Coverage added: <b>Meta &amp; Tencent</b> (L8 capex / cloud), <b>Alibaba</b> (L9), <b>EMCOR</b> (L7 contractors); L9 now shows each backer’s LLM ownership stake.",
+        "Sub-segments redesigned as cards; the GPU/CPU/ASIC explainer rebuilt on a readable light theme; first-person analyst voice and clickable source footnotes throughout.",
         "Still a single scrollable HTML file backed by a refreshable SQLite database + one-command yfinance refresh.",
     ],
     "data_note": (
@@ -820,4 +820,94 @@ LAYER_CONTENT = {
       "<b>Why the utilities don't show an 'AI segment.'</b> Constellation, Vistra, Talen and NextEra are power utilities — AI is a <i>demand driver</i> lifting power prices and contracting their output, not a reported business segment, so there is no clean 'AI revenue' line. The signal instead is the contracts: Microsoft's Three Mile Island restart with Constellation, AWS's 960 MW Susquehanna co-location with Talen, Meta's 1,121 MW Clinton deal. The equipment makers are the more direct plays: Vertiv is the cleanest large-cap DC power-and-cooling pure-play; Schneider and Eaton bury fast-growing DC electrical inside diversified electrification giants (DC is ~16% of Schneider); GE Vernova's gas turbines are sold out for years. Bloom Energy and BWXT are the behind-the-meter/SMR optionality — Bloom's Oracle 2.8 GW Project Jupiter and BWXT's $7.3B backlog are the proof points.",
     ],
   },
+}
+
+
+# ---------------------------------------------------------------------------
+# v12 ADD-ONS — margin focus, extra charts, TSMC capacity table
+#   Kept as separate top-level dicts (vs editing each LAYER_CONTENT entry) so the
+#   builder can merge them in. margin_key in {'gm','om','ebitda'} = column to highlight.
+# ---------------------------------------------------------------------------
+MARGIN_FOCUS = {
+    "L10": ("gm", "<b>Gross margin</b> is what matters here — an app keeps only the spread above what it pays the model provider, so gross margin <i>is</i> the business model."),
+    "L9":  ("gm", "<b>Gross margin</b> (inference unit economics, ~50–60%) is the read to watch. GAAP operating margin is deeply negative mid-training and misleads."),
+    "L8":  ("om", "<b>Operating margin</b> is the franchise read (AWS ~35%, Azure ~50% on AI). For neoclouds, watch the gross-to-operating <i>gap</i> — ~70% gross collapses to negative operating on GPU depreciation."),
+    "L7":  ("ebitda", "<b>EBITDA margin</b> is the right lens — REITs carry heavy depreciation, so EBITDA / AFFO, not net or operating margin, reflects the economics."),
+    "L6":  ("om", "<b>Operating margin</b> separates the winners — Arista ~43%, Broadcom networking ~50% — from the commodity box-shifters."),
+    "L5":  ("gm", "<b>Gross margin</b> is the entire thesis: Foxconn's 5–7% gross on AI servers tells you the assembly layer has almost no pricing power."),
+    "L4":  ("gm", "<b>Gross margin</b> is the pricing-power tell. NVIDIA's ~73% vs the rest of the layer is the single clearest signal of who holds the monopoly."),
+    "L3":  ("ebitda", "<b>EBITDA margin</b> reads the cycle best — memory is capital-intensive and cyclical, so D&A distorts net income; watch EBITDA alongside the (huge) operating-margin swings."),
+    "L2":  ("gm", "<b>Gross margin</b> is the monopoly tell — TSMC's record ~66% gross is pricing power earned by being the only option at the leading edge."),
+    "L1":  ("gm", "<b>Gross margin</b> captures the software/IP economics — EDA runs ~95% incremental gross; for the equipment makers, gross margin shows pricing power on irreplaceable tools."),
+    "L0":  ("om", "<b>Operating margin</b> is the read for the equipment franchises (Vertiv ~18%); for the utilities, lean on EBITDA and contracted-return visibility instead."),
+}
+
+# Extra charts merged AFTER each layer's existing `charts`. Same schema as LAYER_CONTENT charts.
+EXTRA_CHARTS = {
+    "L9": [
+        {"title": "Global LLM industry revenue — annual trend & forecast", "source": "counterpoint",
+         "type": "bar", "unit": "$B",
+         "rows": [("2023", 3, "from <$1B in Jan'23"), ("2024", 12, "first scaled year"),
+                  ("2025", 45, "inflection"), ("2026E", 100, "~$100B ARR by Q1'26"),
+                  ("2028E", 230, "if scaling holds"), ("2030E", 400, "$400B+ base case")]},
+    ],
+    "L8": [
+        {"title": "2026E capex by hyperscaler — the $725B", "source": "filings", "type": "bar", "unit": "$B",
+         "rows": [("Amazon", 200, "largest spender"), ("Microsoft", 190, ""), ("Alphabet", 187, ""),
+                  ("Meta", 140, "captive only"), ("Oracle", 50, "Stargate-driven")]},
+        {"title": "Big-5 hyperscaler capex — history & forecast", "source": "filings", "type": "bar", "unit": "$B",
+         "rows": [("2023", 150, ""), ("2024", 230, "+~53%"), ("2025", 420, "+~83%"),
+                  ("2026E", 725, "+~73% YoY")]},
+    ],
+    "L6": [
+        {"title": "Optical transceiver makers — 2025 (~$22B TAM)", "source": "yole", "type": "donut", "unit": "%",
+         "rows": [("Coherent", 25, "InP leader"), ("Innolight (China)", 24, "#1 in modules"),
+                  ("Eoptolink", 13, "China challenger"), ("Lumentum", 12, "50–60% EML share"),
+                  ("Others", 26, "Fabrinet, Marvell, AAOI")]},
+        {"title": "RAN / AI-RAN market share — 2025", "source": "omdia", "type": "donut", "unit": "%",
+         "rows": [("Huawei", 30, "excluded from West"), ("Ericsson", 24, "no NVIDIA tie"),
+                  ("Nokia", 18, "NVIDIA $1B / AI-RAN tie"), ("Samsung", 7, ""), ("ZTE + others", 21, "")]},
+        {"title": "Optical fiber — Corning's position", "source": "filings", "type": "donut", "unit": "%",
+         "rows": [("Corning", 30, "#1 global; Meta $6B deal"), ("Others", 70, "Prysmian, Sumitomo, Furukawa")]},
+    ],
+    "L4": [
+        {"title": "Custom AI ASIC (XPU) share — 2025", "source": "filings", "type": "donut", "unit": "%",
+         "rows": [("Broadcom", 70, "Google TPU, Meta MTIA, OpenAI"), ("Marvell", 13, "AWS Trainium, MS Maia"),
+                  ("Alchip / GUC / others", 17, "")]},
+        {"title": "Data-center CPU share — 2025", "source": "filings", "type": "donut", "unit": "%",
+         "rows": [("Intel (Xeon)", 55, "losing share"), ("AMD (EPYC)", 39, "gaining fast"),
+                  ("Arm (Graviton etc.)", 6, "hyperscaler in-house")]},
+    ],
+    "L3": [
+        {"title": "DRAM market share — 2025 (~$180B)", "source": "trendforce", "type": "donut", "unit": "%",
+         "rows": [("SK Hynix", 36, "took #1 in 2025"), ("Samsung", 34, ""), ("Micron", 25, ""), ("Others", 5, "")]},
+        {"title": "NAND flash share — 2025 (~$70B)", "source": "trendforce", "type": "donut", "unit": "%",
+         "rows": [("Samsung", 33, ""), ("SK / Solidigm", 20, ""), ("Kioxia", 19, ""),
+                  ("Sandisk", 14, "pure-play"), ("Micron", 11, ""), ("Others", 3, "")]},
+        {"title": "HDD market share — 2025 (~$20B)", "source": "trendforce", "type": "donut", "unit": "%",
+         "rows": [("Seagate", 43, ""), ("Western Digital", 37, ""), ("Toshiba", 20, "")]},
+    ],
+    "L1": [
+        {"title": "WFE equipment share — 2025 (~$120B)", "source": "trendforce", "type": "donut", "unit": "%",
+         "rows": [("ASML", 22, "sole EUV"), ("Applied Materials", 18, "broadest"), ("Tokyo Electron", 13, ""),
+                  ("Lam Research", 11, "etch/memory"), ("KLA", 7, "metrology"), ("Others", 29, "")]},
+        {"title": "EDA software share — 2025 (~$21B)", "source": "filings", "type": "donut", "unit": "%",
+         "rows": [("Synopsys", 32, ""), ("Cadence", 30, ""), ("Siemens EDA", 14, ""), ("Others", 24, "Ansys (now SNPS), etc.")]},
+    ],
+}
+
+# Small fact table rendered inside Layer 2 (TSMC capacity & AI-mix trajectory).
+EXTRA_TABLES = {
+    "L2": {
+        "title": "TSMC capacity & AI-mix trajectory",
+        "source": "filings",
+        "header": ["", "2024", "2025", "2026E", "2027E"],
+        "rows": [
+            ["CoWoS capacity (k wafers/mo)", "35", "~75", "~130", "~170"],
+            ["HPC (incl. AI) % of revenue", "51%", "~58%", "61%+", "~65%"],
+            ["Revenue (US$B)", "$90", "$121", "~$160", "~$200"],
+            ["Gross margin", "~53%", "~59%", "~66%", "mid-60s%"],
+        ],
+        "note": "CoWoS advanced-packaging capacity has tripled yet remains sold out through 2027; AI/HPC is now the majority of TSMC's revenue mix. Figures are curated estimates from TSMC guidance and disclosures.",
+    },
 }

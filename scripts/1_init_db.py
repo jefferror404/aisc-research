@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS company_layer (
     segment_rev_note TEXT,               -- segment revenue $ + % of total (curated, contextual)
     key_contracts   TEXT,                -- contracts WITH durations (curated, contextual)
     backlog_rpo     TEXT,                -- backlog / RPO (curated, from filings)
+    ai_rev_share    TEXT,                -- AI-related revenue as % of total company revenue (curated estimate; '100%' = pure-play)
     note            TEXT,                -- short contextual note shown in/after the table
     sort_order      INTEGER DEFAULT 0,
     UNIQUE (ticker, layer, sublayer)

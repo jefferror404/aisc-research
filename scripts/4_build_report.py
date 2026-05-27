@@ -34,12 +34,14 @@ def esc(x):
 
 
 def b(x, dollar=True, dec=1):
-    """USD billions from a raw USD figure."""
+    """USD from a raw USD figure. Sub-$1B shown in millions ($510M) for resolution;
+    >=$1B in billions ($5.1B). Keeps small neocloud revenues legible."""
     if x is None:
         return "—"
-    v = x / 1e9
-    s = f"{v:,.{dec}f}"
-    return f"${s}B" if dollar else s
+    pre = "$" if dollar else ""
+    if abs(x) < 1e9:
+        return f"{pre}{x/1e6:,.0f}M"
+    return f"{pre}{x/1e9:,.{dec}f}B"
 
 
 def pct(x, dec=0):
@@ -130,14 +132,23 @@ def next_est_usd_b(con, ticker, country, latest_fy_usd):
 # ----------------------------- HTML rendering -----------------------------
 LAYER_TABLE_COLS = [
     ("Ticker", "ticker"), ("Company", "name"), ("Segment / share of revenue", "segment"),
-    ("Revenue FY25", "fyrev"), ("Revenue 2026E", "est"), ("Gross Margin", "gm"),
-    ("Operating Margin", "om"), ("EBITDA Margin", "ebitda"),
+    ("AI rev % of total", "aishare"),
+    ("Revenue FY25", "fyrev"), ("Revenue 2026E", "est"), ("Δ % YoY", "chg"),
+    ("Gross Margin", "gm"), ("Operating Margin", "om"), ("EBITDA Margin", "ebitda"),
     ("Market Cap", "mcap"), ("P/E (TTM)", "pe"), ("Fwd P/E", "fpe"), ("P/S", "ps"),
     ("EPS Growth", "eg"), ("Backlog / RPO", "backlog"),
 ]
+# number of columns that follow the (ticker, company, segment, AI%) lead block —
+# used for the "Private — see notes" colspan.
+_PRIV_COLSPAN = len(LAYER_TABLE_COLS) - 4
 
 
-def render_company_row(con, cl):
+def _mfcls(key, focus):
+    """Return the highlight class if this margin column is the layer's focus column."""
+    return " mfocus" if (focus and key == focus) else ""
+
+
+def render_company_row(con, cl, margin_focus=None):
     ticker = cl["ticker"]
     co = con.execute("SELECT * FROM companies WHERE ticker=?", (ticker,)).fetchone()
     f = latest_financials(con, ticker)
@@ -159,6 +170,8 @@ def render_company_row(con, cl):
 
     seg = cl["segment_rev_note"] or (cl["segment_label"] or "")
     pure_badge = ' <span class="badge pure">pure-play</span>' if pure else ""
+    ai_share = cl["ai_rev_share"] if "ai_rev_share" in cl.keys() else ""
+    ai_cell = f'<td class="ai">{esc(ai_share or "—")}</td>'
 
     fy_cell = "—"
     if fy_rev_usd is not None:
@@ -168,13 +181,21 @@ def render_company_row(con, cl):
     if est_b is not None:
         est_cell = f'${est_b:,.0f}B<span class="sub">{esc(est_lbl)}</span>'
 
+    # YoY % change FY25 -> 2026E (only when both are present)
+    chg_cell, chg = "—", None
+    if est_b is not None and fy_rev_usd:
+        chg = (est_b * 1e9 - fy_rev_usd) / fy_rev_usd
+        sign = "+" if chg >= 0 else ""
+        chg_cell = f'{sign}{chg*100:.0f}%'
+
     if not is_public:
-        # private name (L9/L10) — no market data
+        # private name — no market data
         cells = [
             f'<td class="tk">{esc(ticker)}</td>',
             f'<td class="co">{esc(cl["segment_label"] or ticker)}{pure_badge}</td>',
             f'<td class="seg">{esc(seg)}</td>',
-            '<td colspan="11" class="priv">Private — see notes</td>',
+            ai_cell,
+            f'<td colspan="{_PRIV_COLSPAN}" class="priv">Private — see notes</td>',
         ]
         return f'<tr>{"".join(cells)}</tr>'
 
@@ -182,11 +203,13 @@ def render_company_row(con, cl):
         f'<td class="tk">{esc(ticker)}</td>',
         f'<td class="co">{esc(co["name"] if co else ticker)}{pure_badge}</td>',
         f'<td class="seg">{esc(seg)}</td>',
+        ai_cell,
         f'<td class="num">{fy_cell}</td>',
         f'<td class="num">{est_cell}</td>',
-        f'<td class="num {cls_margin(gm)}">{pct(gm)}</td>',
-        f'<td class="num {cls_margin(om)}">{pct(om)}</td>',
-        f'<td class="num {cls_margin(eb)}">{pct(eb)}</td>',
+        f'<td class="num {cls_growth(chg)}">{chg_cell}</td>',
+        f'<td class="num {cls_margin(gm)}{_mfcls("gm", margin_focus)}">{pct(gm)}</td>',
+        f'<td class="num {cls_margin(om)}{_mfcls("om", margin_focus)}">{pct(om)}</td>',
+        f'<td class="num {cls_margin(eb)}{_mfcls("ebitda", margin_focus)}">{pct(eb)}</td>',
         f'<td class="num">{b(m["market_cap_usd"]) if m else "—"}</td>',
         f'<td class="num">{mult(m["pe_ttm"]) if m else "—"}</td>',
         f'<td class="num">{mult(m["forward_pe"]) if m else "—"}</td>',
@@ -197,14 +220,16 @@ def render_company_row(con, cl):
     return f'<tr>{"".join(cells)}</tr>'
 
 
-def render_layer_table(con, layer):
+def render_layer_table(con, layer, margin_focus=None):
     rows = con.execute(
         """SELECT * FROM company_layer WHERE layer=? ORDER BY
            CASE sublayer WHEN '' THEN 'zzz' ELSE sublayer END, sort_order""", (layer,)
     ).fetchall()
     if not rows:
         return ""
-    head = "".join(f"<th>{esc(c[0])}</th>" for c in LAYER_TABLE_COLS)
+    head = "".join(
+        f'<th class="{("mfocus" if c[1] == margin_focus else "")}">{esc(c[0])}</th>'
+        for c in LAYER_TABLE_COLS)
     body_parts, current_sub = [], None
     for cl in rows:
         sub = cl["sublayer"] or ""
@@ -212,7 +237,7 @@ def render_layer_table(con, layer):
             body_parts.append(
                 f'<tr class="subhdr"><td colspan="{len(LAYER_TABLE_COLS)}">{esc(sub)}</td></tr>')
             current_sub = sub
-        body_parts.append(render_company_row(con, cl))
+        body_parts.append(render_company_row(con, cl, margin_focus))
     return (f'<div class="tablewrap"><table class="comp">'
             f'<thead><tr>{head}</tr></thead><tbody>{"".join(body_parts)}</tbody></table></div>')
 
@@ -369,10 +394,38 @@ def render_glossary(items):
 
 
 def render_subsegments(items):
+    """Render sub-segments as a compact card grid. Each item is split on the first
+    ' — ' into a bold lead and the detail, so it reads like a labelled card."""
     if not items:
         return ""
-    lis = "".join(f"<li>{esc_html_keep(s)}</li>" for s in items)
-    return f'<div class="subseg"><h4>Sub-segments</h4><ul>{lis}</ul></div>'
+    cards = ""
+    for s in items:
+        sep = " — " if " — " in s else (" - " if " - " in s else None)
+        if sep:
+            head, _, rest = s.partition(sep)
+            cards += (f'<div class="sscard"><div class="sshead">{esc_html_keep(head)}</div>'
+                      f'<div class="ssbody">{esc_html_keep(rest)}</div></div>')
+        else:
+            cards += f'<div class="sscard"><div class="ssbody">{esc_html_keep(s)}</div></div>'
+    return f'<div class="subseg"><h4>Sub-segments</h4><div class="sscards">{cards}</div></div>'
+
+
+def render_extra_table(layer):
+    t = N.EXTRA_TABLES.get(layer) if hasattr(N, "EXTRA_TABLES") else None
+    if not t:
+        return ""
+    head = "".join(f'<th class="{"num" if i else ""}">{esc(h)}</th>'
+                   for i, h in enumerate(t["header"]))
+    body = ""
+    for row in t["rows"]:
+        tds = "".join(f'<td class="{"num" if i else "lbl"}">{esc(c)}</td>'
+                      for i, c in enumerate(row))
+        body += f"<tr>{tds}</tr>"
+    cite = f'[[cite:{t["source"]}]]' if t.get("source") else ""
+    note = f'<p class="src">{esc_html_keep(t["note"])}{cite}</p>' if t.get("note") else ""
+    return (f'<div class="xtable"><h4>{esc(t["title"])}</h4>'
+            f'<div class="tablewrap"><table class="comp facts" style="min-width:520px">'
+            f'<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>{note}</div>')
 
 
 def render_deals_detail(items):
@@ -384,18 +437,21 @@ def render_deals_detail(items):
 
 def render_gpu_cpu_asic():
     g = N.GPU_CPU_ASIC
+    # light-theme cards, one accent per chip type for legibility
+    accents = ["#0a8f5b", "#2547d0", "#b9770a"]  # CPU / GPU / ASIC
     cards = ""
-    for c in g["cards"]:
-        cards += f'''<div class="chipcard">
-          <h5>{esc(c["name"])}</h5><div class="tagline">{esc(c["tagline"])}</div>
+    for i, c in enumerate(g["cards"]):
+        ac = accents[i % len(accents)]
+        cards += f'''<div class="chipcard" style="border-top:3px solid {ac}">
+          <h5 style="color:{ac}">{esc(c["name"])}</h5><div class="tagline">{esc(c["tagline"])}</div>
           <p>{esc_html_keep(c["body"])}</p>
           <p class="val"><b>Value:</b> {esc_html_keep(c["value"])}</p></div>'''
     uses = "".join(f"<li><b>{esc(k)}:</b> {esc_html_keep(v)}</li>" for k, v in g["use_cases"])
     return f'''<div class="feature">
       <h4>{esc(g["heading"])}</h4>
-      <p>{esc_html_keep(g["intro"])}</p>
+      <p class="flead">{esc_html_keep(g["intro"])}</p>
       <div class="chipcards">{cards}</div>
-      <p><b>Can one replace another?</b> {esc_html_keep(g["can_they_replace"])}</p>
+      <div class="replace"><b>Can one replace another?</b> {esc_html_keep(g["can_they_replace"])}</div>
       <div class="uses"><b>Use cases</b><ul>{uses}</ul></div>
     </div>'''
 
@@ -494,6 +550,31 @@ def render_deal_web():
       <div class="callout warn"><h4>Circular financing</h4><p>{esc_html_keep(d["circular_note"])}</p></div></section>'''
 
 
+def render_layer_head(lc, layer):
+    """Two-column opener: left = 3 info cards (What it does / Who pays whom /
+    Key Metrics to Track), right = Analyst's Take + stance."""
+    mf = N.MARGIN_FOCUS.get(layer) if hasattr(N, "MARGIN_FOCUS") else None
+    margin_line = ""
+    if mf:
+        margin_line = (f'<div class="metricmargin"><span class="mmtag">Margin that matters</span>'
+                       f'{esc_html_keep(mf[1])}</div>')
+    left = (
+        f'<div class="infocard"><h4>What this layer does</h4>'
+        f'<p>{esc_html_keep(lc["what_it_does"])}</p></div>'
+        f'<div class="infocard"><h4>Who pays whom</h4>'
+        f'<p>{esc_html_keep(lc["who_pays_whom"])}</p></div>'
+        f'<div class="infocard"><h4>Key Metrics to Track</h4>'
+        f'<p>{esc_html_keep(lc["how_to_analyze"])}</p>{margin_line}</div>'
+    )
+    stance = (f'<div class="stance"><span class="stag">My stance</span>'
+              f'{esc_html_keep(lc["stance"])}</div>') if lc.get("stance") else ""
+    take = ""
+    if lc.get("analyst_take"):
+        take = (f'<div class="take"><h4>Analyst’s Take</h4>'
+                f'<p>{esc_html_keep(lc["analyst_take"])}</p>{stance}</div>')
+    return f'<div class="layerhead"><div class="lhleft">{left}</div><div class="lhright">{take}</div></div>'
+
+
 def render_layer_section(con, layer_row):
     layer, name = layer_row["layer"], layer_row["name"]
     lc = N.LAYER_CONTENT.get(layer)
@@ -501,22 +582,21 @@ def render_layer_section(con, layer_row):
         return ""
     num = layer[1:]
     title = f"Layer {num} — {esc(name)}"
+    mf = N.MARGIN_FOCUS.get(layer) if hasattr(N, "MARGIN_FOCUS") else None
+    margin_key = mf[0] if mf else None
     parts = [f'<section id="{layer}" class="layer"><h2>{title}</h2>']
-    parts.append(f'<p class="lead">{esc_html_keep(lc["what_it_does"])}</p>')
-    # Analyst's Take — first-person thesis, leads the layer
-    if lc.get("analyst_take"):
-        stance = (f'<div class="stance"><span class="stag">My stance</span>'
-                  f'{esc_html_keep(lc["stance"])}</div>') if lc.get("stance") else ""
-        parts.append(f'<div class="take"><h4>Analyst’s Take</h4>'
-                     f'<p>{esc_html_keep(lc["analyst_take"])}</p>{stance}</div>')
-    parts.append(f'<p class="who"><b>Who pays whom:</b> {esc_html_keep(lc["who_pays_whom"])}</p>')
+    parts.append(render_layer_head(lc, layer))
     parts.append(render_block_three(lc))
-    parts.append(render_charts(lc.get("charts")))
+    # charts: layer's own + v12 extras
+    charts = list(lc.get("charts") or [])
+    if hasattr(N, "EXTRA_CHARTS"):
+        charts += N.EXTRA_CHARTS.get(layer, [])
+    parts.append(render_charts(charts))
     parts.append(render_subsegments(lc.get("sub_segments")))
+    parts.append(render_extra_table(layer))
     if layer == "L4":
         parts.append(render_gpu_cpu_asic())
-    parts.append(render_layer_table(con, layer))
-    parts.append(f'<p class="how"><b>How to analyze this layer:</b> {esc_html_keep(lc["how_to_analyze"])}</p>')
+    parts.append(render_layer_table(con, layer, margin_key))
     parts.append(render_deals_detail(lc.get("deals_detail")))
     parts.append(render_glossary(lc.get("glossary")))
     parts.append("</section>")
@@ -552,7 +632,7 @@ def build():
     # numbers run in document order, then append the References section.
     body = f'''
   <section id="summary">
-    <div class="whatsnew"><h3>What’s new in v11</h3><ul>{whatsnew}</ul></div>
+    <div class="whatsnew"><h3>What’s new in v12</h3><ul>{whatsnew}</ul></div>
     <h2>1 · Executive Summary</h2>
     <p>This is my map of the AI supply chain, eleven layers deep — from the apps people pay for (L10)
     down to the electricity that powers it all (L0). Each layer opens with what it does, then <b>my
@@ -740,7 +820,39 @@ sup.cite a:hover{text-decoration:underline}
 .legend td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
 .legend td.cnote{color:var(--muted);font-size:11px}
 .legend .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:middle}
-@media(max-width:820px){.three,.chipcards,.risks,.stacks,.charts{grid-template-columns:1fr}.subseg ul{columns:1}
+/* ---- v12: two-column layer head + info cards ---- */
+.layerhead{display:grid;grid-template-columns:1.05fr 0.95fr;gap:14px;margin:14px 0 4px;align-items:stretch}
+.lhleft{display:flex;flex-direction:column;gap:10px}
+.lhright{display:flex}
+.infocard{border:1px solid var(--line);border-radius:11px;padding:11px 14px;background:var(--card)}
+.infocard h4{margin:0 0 5px}.infocard p{margin:0;font-size:13.5px;line-height:1.5}
+.metricmargin{margin-top:9px;background:#f7faf8;border:1px solid #d7e7df;border-radius:8px;padding:7px 10px;font-size:12.5px;color:#1f5740}
+.metricmargin .mmtag{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:#0a8f5b;margin-bottom:2px}
+.lhright .take{margin:0;width:100%;display:flex;flex-direction:column;justify-content:center}
+/* ---- sub-segment cards ---- */
+.subseg h4{margin:0 0 8px}
+.sscards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sscard{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--card);font-size:12.5px;line-height:1.45}
+.sscard .sshead{font-weight:700;color:#34406b;margin-bottom:3px}
+.sscard .ssbody{color:#3a4254}
+/* ---- AI rev% cell + margin focus highlight ---- */
+td.ai{min-width:120px;max-width:150px;font-size:12px;font-weight:600;color:#1c2c5e;white-space:normal}
+table.comp th.mfocus{background:#eaf2ff;color:#1c2c5e;border-bottom-color:#9bb8ee}
+table.comp td.num.mfocus{background:#f3f8ff;font-weight:700;box-shadow:inset 2px 0 0 #b9c8ec,inset -2px 0 0 #b9c8ec}
+/* ---- extra fact table (TSMC) ---- */
+.xtable{margin:16px 0}.xtable h4{margin:0 0 8px}
+table.comp.facts{min-width:520px}table.comp.facts td.lbl{font-weight:600;color:#34406b}
+/* ---- GPU/CPU/ASIC feature box: light theme (was dark navy) ---- */
+.feature{background:#f6f8fe;color:var(--ink);border:1px solid #d6e0f5;border-radius:13px;padding:18px 20px;margin:18px 0}
+.feature h4{color:var(--accent)}.feature .flead{font-size:14.5px;color:#3a4254}.feature b{color:var(--ink)}
+.feature .chipcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px}
+.feature .chipcard h5{margin:0 0 2px;font-size:15px}
+.feature .chipcard .tagline{font-size:11.5px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.feature .chipcard p{font-size:12.5px;line-height:1.5;color:#3a4254}.feature .chipcard .val{color:#1f5740}
+.feature .replace{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:12px 0;font-size:13.5px}
+.feature .uses ul{margin:6px 0;padding-left:18px}.feature .uses li{font-size:13.5px;margin:3px 0;color:#3a4254}
+@media(max-width:900px){.layerhead{grid-template-columns:1fr}.sscards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:820px){.three,.chipcards,.risks,.stacks,.charts,.sscards{grid-template-columns:1fr}.subseg ul{columns:1}
   .hero h1{font-size:29px}.chartbody{flex-direction:column;align-items:flex-start}}
 """
 
