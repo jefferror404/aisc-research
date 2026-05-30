@@ -154,9 +154,13 @@ sup.cite a:hover{text-decoration:underline}
 .refs .rbody{color:var(--ink-2)}
 /* charts */
 .charts{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0}
-.chart{margin:0;border:1px solid var(--rule);border-radius:2px;padding:13px 15px;background:var(--surface)}
-.chart figcaption{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px}
-.chartbody{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.chart{margin:0;border:1px solid var(--rule);border-radius:2px;padding:0;background:var(--surface);overflow:hidden}
+.chart figcaption{font-size:12.5px;font-weight:600;color:var(--chrome-ink);margin:0;background:var(--chrome);padding:8px 14px;border-bottom:1px solid var(--chrome-line)}
+.chart figcaption::before{content:"Exhibit \00b7 ";color:var(--tiffany);font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.chartbody{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:13px 15px}
+.tablewrap>.ex-h{display:flex;justify-content:space-between;gap:10px;background:var(--chrome);color:var(--chrome-ink);padding:8px 14px;border-bottom:1px solid var(--chrome-line);position:sticky;left:0}
+.tablewrap>.ex-h .lbl{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--tiffany);font-weight:600}
+.tablewrap>.ex-h .cap{font-size:12.5px;font-weight:600;color:var(--chrome-ink)}
 .chartviz{flex:0 0 auto}
 .donut{width:150px;height:150px}
 .bars{width:100%;max-width:440px;height:auto}
