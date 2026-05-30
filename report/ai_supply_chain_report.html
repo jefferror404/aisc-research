@@ -255,6 +255,10 @@ h2{border-top:1px solid var(--rule);padding-top:16px}
 /* tiffany-tinted metric chip backgrounds for a touch of color */
 .metricval{background:var(--tiffany-bg)}
 .take{border-radius:12px}
+/* display typeface: Space Grotesk on headlines/section titles/captions */
+:root{--display:'Space Grotesk',var(--font-sans)}
+.hero h1,h2,h3,.exhibit>.ex-h .cap,.tablewrap>.ex-h .cap,.chart figcaption,.lprofile>.ph .pn,.sscard .sshead,.chipcard h5{font-family:var(--display);font-weight:700;letter-spacing:-.01em}
+.hero h1{font-weight:700}
 </style></head><body>
 <header class="hero">
   <div class="wrap">

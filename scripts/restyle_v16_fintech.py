@@ -46,6 +46,10 @@ h2{border-top:1px solid var(--rule);padding-top:16px}
 /* tiffany-tinted metric chip backgrounds for a touch of color */
 .metricval{background:var(--tiffany-bg)}
 .take{border-radius:12px}
+/* display typeface: Space Grotesk on headlines/section titles/captions */
+:root{--display:'Space Grotesk',var(--font-sans)}
+.hero h1,h2,h3,.exhibit>.ex-h .cap,.tablewrap>.ex-h .cap,.chart figcaption,.lprofile>.ph .pn,.sscard .sshead,.chipcard h5{font-family:var(--display);font-weight:700;letter-spacing:-.01em}
+.hero h1{font-weight:700}
 """
 
 html = SRC.read_text()
@@ -55,7 +59,7 @@ assert n == 1
 # revert font link to Inter + JetBrains Mono (drop Fraunces)
 html = re.sub(
     r'<link href="https://fonts\.googleapis\.com/css2\?family=Fraunces[^"]*" rel="stylesheet">',
-    '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">',
+    '<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">',
     html, count=1)
 
 # remap inline chart palette: current dark set -> vivid light-paper palette
