@@ -50,6 +50,27 @@ h2{border-top:1px solid var(--rule);padding-top:16px}
 :root{--display:'Space Grotesk',var(--font-sans)}
 .hero h1,h2,h3,.exhibit>.ex-h .cap,.tablewrap>.ex-h .cap,.chart figcaption,.lprofile>.ph .pn,.sscard .sshead,.chipcard h5{font-family:var(--display);font-weight:700;letter-spacing:-.01em}
 .hero h1{font-weight:700}
+/* ===== refinement pass: heading scale, accent, depth+rhythm ===== */
+/* headings: bigger, more confident, tighter tracking */
+.hero h1{font-size:38px;letter-spacing:-.8px;line-height:1.04}
+.hero .kicker{font-size:11px;letter-spacing:.22em}
+h2{font-size:27px;letter-spacing:-.6px}
+.lprofile>.ph .pn,.exhibit>.ex-h .cap,.tablewrap>.ex-h .cap{font-size:13px;letter-spacing:-.01em}
+.chart figcaption{font-size:13px}
+/* accent: slightly punchier teal + brighter labels on navy */
+:root{--tiffany:#0ea5a0;--tiffany-ink:#0a7d78;--tiffany-bg:#e0f5f3}
+.exhibit>.ex-h .lbl,.tablewrap>.ex-h .lbl,.lprofile>.ph .pn,.hero .kicker,.chart figcaption::before,.ratingbox .rb-call b{color:#34e3d6}
+/* depth: lift cards a touch, more generous radius on big panels */
+:root{--shadow:0 1px 2px rgba(16,24,40,.05),0 6px 20px rgba(16,24,40,.07)}
+.lprofile,.exhibit,.tablewrap{border-radius:14px}
+.lprofile{box-shadow:0 2px 6px rgba(16,24,40,.06),0 14px 36px rgba(16,24,40,.10)}
+/* rhythm: more breathing room between major blocks */
+.lprofile>.pb{padding:18px}
+.three{margin:20px 0;gap:14px}
+.subh{margin:24px 0 9px}
+.layerhead{gap:16px}
+.lhleft,.lhright{gap:12px}
+section.layer{margin-top:38px}
 """
 
 html = SRC.read_text()
